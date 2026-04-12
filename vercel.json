@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/zendesk", "destination": "/api/zendesk.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
