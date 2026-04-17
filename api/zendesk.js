@@ -1,9 +1,6 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+const fs = require("fs");
+const path = require("path");
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const mappingPath = path.join(__dirname, "..", "zendesk-field-mapping.json");
 
 function loadZendeskMapping() {
@@ -73,7 +70,7 @@ function buildZendeskRouting(customFieldConfig, context) {
   return { customFields, tags };
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -182,4 +179,4 @@ Details techniques du formulaire :
   } catch {
     return res.status(500).json({ error: "Erreur interne du serveur." });
   }
-}
+};
