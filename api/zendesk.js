@@ -167,16 +167,36 @@ Details techniques du formulaire :
     );
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const rawError = await response.text();
+      let errorData;
+      try {
+        errorData = rawError ? JSON.parse(rawError) : {};
+      } catch {
+        errorData = { error: rawError || `HTTP ${response.status}` };
+      }
+
+      console.error("Erreur Zendesk API:", {
+        status: response.status,
+        body: errorData
+      });
+
       return res.status(response.status).json({
         error: formatZendeskError(errorData),
         details: errorData
       });
     }
 
-    const data = await response.json();
+    const rawSuccess = await response.text();
+    const data = rawSuccess ? JSON.parse(rawSuccess) : {};
     return res.json({ success: true, ticketId: data.ticket?.id });
-  } catch {
-    return res.status(500).json({ error: "Erreur interne du serveur." });
+  } catch (error) {
+    console.error("Erreur serveur /api/zendesk:", {
+      message: error?.message,
+      stack: error?.stack
+    });
+
+    return res.status(500).json({
+      error: error?.message || "Erreur interne du serveur."
+    });
   }
 };
