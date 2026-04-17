@@ -432,7 +432,14 @@ async function submitForm(node) {
       })
     });
 
-    const data = await res.json();
+    const rawResponse = await res.text();
+    let data;
+    try {
+      data = rawResponse ? JSON.parse(rawResponse) : {};
+    } catch {
+      throw new Error(`Réponse non JSON du serveur: ${rawResponse.slice(0, 300) || "vide"}`);
+    }
+
     if (data.success) {
       state.ticketId = data.ticketId;
       state.done     = true;
