@@ -414,9 +414,21 @@ async function submitForm(node) {
         note:        contextNote,
         photoUpload: !!(state.values.photoUpload_opt || state.values.photoUpload_req),
         category:    state.path[0]?.label     || "",
+        categoryId:  state.path[0]?.id        || "",
         subIssue:    state.path[state.path.length - 1]?.label || "",
+        subIssueId:  state.path[state.path.length - 1]?.id    || "",
         agentNote:   node.agentNote           || "",
-        path:        state.path.map(n => n.label).join(" › ")
+        path:        state.path.map(n => n.label).join(" › "),
+        pathIds:     state.path.map(n => n.id),
+        pathLabels:  state.path.map(n => n.label),
+        formValues:  state.values,
+        articleLinks: {
+          annulation: ART.annulation,
+          retour: ART.retour,
+          nonConforme: ART.nonConforme,
+          defectueux: ART.defectueux,
+          pointRelais: ART.pointRelais
+        }
       })
     });
 
