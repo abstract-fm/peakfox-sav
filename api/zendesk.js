@@ -81,15 +81,16 @@ export default async function handler(req, res) {
     agentRecap
   } = req.body;
 
-  if (!email || !orderNumber) {
-    return res.status(400).json({ error: "Email et numero de commande requis." });
+  if (!email || (!orderNumber && !returnId)) {
+    return res.status(400).json({ error: "Email et numero de commande ou ID retour requis." });
   }
 
   const auth = Buffer.from(
     `${process.env.ZENDESK_EMAIL}/token:${process.env.ZENDESK_TOKEN}`
   ).toString("base64");
 
-  const subject = `[SAV] ${category || "Demande"} - ${subIssue || ""} - Commande ${orderNumber}`;
+  const referenceLabel = orderNumber ? `Commande ${orderNumber}` : `Retour ${returnId}`;
+  const subject = `[SAV] ${category || "Demande"} - ${subIssue || ""} - ${referenceLabel}`;
 
   const body = `
 ${agentRecap || ""}
