@@ -46,6 +46,11 @@ function formatZendeskError(errorData) {
   return "Erreur Zendesk API";
 }
 
+function getRequiredEnv(name) {
+  const value = process.env[name];
+  return typeof value === "string" ? value.trim() : "";
+}
+
 function buildZendeskRouting(customFieldConfig, context) {
   const customFields = [];
 
@@ -97,8 +102,23 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "Email et numero de commande ou ID retour requis." });
   }
 
+  const zendeskEmail = getRequiredEnv("ZENDESK_EMAIL");
+  const zendeskToken = getRequiredEnv("ZENDESK_TOKEN");
+  const zendeskDomain = getRequiredEnv("ZENDESK_DOMAIN");
+
+  if (!zendeskEmail || !zendeskToken || !zendeskDomain) {
+    return res.status(500).json({
+      error: "Configuration Zendesk manquante",
+      details: {
+        ZENDESK_EMAIL: Boolean(zendeskEmail),
+        ZENDESK_TOKEN: Boolean(zendeskToken),
+        ZENDESK_DOMAIN: Boolean(zendeskDomain)
+      }
+    });
+  }
+
   const auth = Buffer.from(
-    `${process.env.ZENDESK_EMAIL}/token:${process.env.ZENDESK_TOKEN}`
+    `${zendeskEmail}/token:${zendeskToken}`
   ).toString("base64");
 
   const referenceLabel = orderNumber ? `Commande ${orderNumber}` : `Retour ${returnId}`;
@@ -154,7 +174,7 @@ Details techniques du formulaire :
 
   try {
     const response = await fetch(
-      `https://${process.env.ZENDESK_DOMAIN}/api/v2/tickets.json`,
+      `https://${zendeskDomain}/api/v2/tickets.json`,
       {
         method: "POST",
         headers: {
@@ -192,11 +212,18 @@ Details techniques du formulaire :
   } catch (error) {
     console.error("Erreur serveur /api/zendesk:", {
       message: error?.message,
-      stack: error?.stack
+      stack: error?.stack,
+      causeMessage: error?.cause?.message,
+      causeCode: error?.cause?.code
     });
 
     return res.status(500).json({
-      error: error?.message || "Erreur interne du serveur."
+      error: error?.message || "Erreur interne du serveur.",
+      details: {
+        causeMessage: error?.cause?.message || null,
+        causeCode: error?.cause?.code || null,
+        zendeskDomain
+      }
     });
   }
 };
