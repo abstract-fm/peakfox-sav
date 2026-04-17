@@ -437,11 +437,18 @@ async function submitForm(node) {
       state.ticketId = data.ticketId;
       state.done     = true;
       render();
-    } else throw new Error(data.error || "Erreur inconnue");
+    } else {
+      const detailText =
+        data.details && typeof data.details === "object"
+          ? JSON.stringify(data.details)
+          : "";
+      throw new Error([data.error || "Erreur inconnue", detailText].filter(Boolean).join(" - "));
+    }
 
-  } catch {
+  } catch (error) {
     const box = document.getElementById("errBox");
-    box.innerHTML = "<strong>Erreur</strong> — Impossible d'envoyer. Réessayez ou contactez-nous directement.";
+    const errorMessage = error?.message || "Impossible d'envoyer. Reessayez ou contactez-nous directement.";
+    box.innerHTML = `<strong>Erreur</strong> - ${escapeHtml(errorMessage)}`;
     box.classList.remove("hidden");
     sendBtn.textContent = "Envoyer ma demande";
     sendBtn.disabled    = false;
@@ -514,3 +521,5 @@ function openFaqFromHash() {
 
 window.addEventListener("DOMContentLoaded", openFaqFromHash);
 window.addEventListener("hashchange", openFaqFromHash);
+
+

@@ -34,6 +34,21 @@ function pushCustomField(customFields, id, value) {
   customFields.push({ id: normalizedId, value });
 }
 
+function formatZendeskError(errorData) {
+  if (!errorData) return "Erreur Zendesk API";
+  if (typeof errorData === "string") return errorData;
+  if (Array.isArray(errorData.details?.base) && errorData.details.base.length) {
+    return errorData.details.base.join(", ");
+  }
+  if (typeof errorData.description === "string" && errorData.description) {
+    return errorData.description;
+  }
+  if (typeof errorData.error === "string" && errorData.error) {
+    return errorData.error;
+  }
+  return "Erreur Zendesk API";
+}
+
 function buildZendeskRouting(customFieldConfig, context) {
   const customFields = [];
 
@@ -156,7 +171,10 @@ Details techniques du formulaire :
 
     if (!response.ok) {
       const errorData = await response.json();
-      return res.status(response.status).json({ error: "Erreur Zendesk API", details: errorData });
+      return res.status(response.status).json({
+        error: formatZendeskError(errorData),
+        details: errorData
+      });
     }
 
     const data = await response.json();
