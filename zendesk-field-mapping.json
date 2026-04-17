@@ -4,10 +4,10 @@
       "id": 47705864427540,
       "source": "categoryId",
       "values": {
-        "annulation": "annulation_commande",
-        "modification": "modification_commande",
-        "suivi": "probleme_suivi",
-        "reception": "probleme_reception",
+        "annulation": "annulation",
+        "modification": "modification",
+        "suivi": "suivi",
+        "reception": "reception",
         "retour": "retour",
         "defectueux": "defectueux"
       }
