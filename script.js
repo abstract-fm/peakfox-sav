@@ -401,8 +401,12 @@ async function submitForm(node) {
 
   try {
     const contextNote = Object.entries(state.values)
-      .filter(([k]) => k.endsWith("_context"))
-      .map(([, v]) => v).join("\n") || "";
+      .filter(([key, value]) => {
+        if (!value || typeof value !== "string" || !value.trim()) return false;
+        return key.endsWith("_context") || key === "modifDetail" || key === "annulRaison" || key === "defect_context";
+      })
+      .map(([, value]) => value)
+      .join("\n") || "";
 
     const res  = await fetch("/api/zendesk", {
       method: "POST",

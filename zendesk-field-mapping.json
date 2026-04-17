@@ -4,12 +4,12 @@
       "id": 47705864427540,
       "source": "categoryId",
       "values": {
-        "annulation": "annulation",
-        "modification": "modification",
-        "suivi": "suivi",
-        "reception": "reception",
-        "retour": "retour",
-        "defectueux": "defectueux"
+        "annulation": "annulation_/_modification_de_commande",
+        "modification": "annulation_/_modification_de_commande",
+        "suivi": "commande_expédiée",
+        "reception": "retourfox",
+        "retour": "retourfox",
+        "defectueux": "defecfox"
       }
     },
     "numeroCommandeFox": {
