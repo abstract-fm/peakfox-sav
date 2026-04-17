@@ -74,6 +74,321 @@
         </div>
       </div>
     </section>
+
+    <section class="faq-section" id="faqSection">
+      <div class="faq-shell">
+        <div class="faq-headline">
+          <div>
+            <p class="faq-kicker">Centre d'aide</p>
+            <h2>Articles FAQ</h2>
+          </div>
+          <p class="faq-copy">Retrouvez les réponses sur les livraisons, retours, annulations et problèmes produits, sans toucher au formulaire SAV existant.</p>
+        </div>
+
+        <div class="faq-search-wrap">
+          <span class="faq-search-icon">🔍</span>
+          <input class="faq-search-input" type="text" id="faqSearch" placeholder="Rechercher un article…" oninput="filterFaqArticles(this.value)" />
+        </div>
+
+        <div class="faq-cats">
+          <a class="faq-cat-card" href="#expeditions"><span class="faq-cat-icon">📦</span>Expédition & livraison</a>
+          <a class="faq-cat-card" href="#retours"><span class="faq-cat-icon">↩</span>Retours & remboursements</a>
+          <a class="faq-cat-card" href="#annulation"><span class="faq-cat-icon">✕</span>Annulation de commande</a>
+          <a class="faq-cat-card" href="#produits"><span class="faq-cat-icon">⌚</span>Produits défectueux</a>
+          <a class="faq-cat-card" href="#suivi"><span class="faq-cat-icon">🔎</span>Suivi de colis</a>
+          <a class="faq-cat-card" href="#autres"><span class="faq-cat-icon">💬</span>Autres questions</a>
+        </div>
+
+        <div class="faq-section-block">
+          <div class="faq-section-anchor" id="expeditions"></div>
+          <div class="faq-section-head"><span class="faq-section-emoji">📦</span><h3>Expédition & livraison</h3></div>
+          <div class="faq-articles">
+            <div class="faq-article-card" data-search="expédition livraison délai">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Combien de temps pour qu'une commande soit expédiée ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">📦 Expédition</div>
+                <p>Les commandes sont déposées à La Poste tous les matins du lundi au vendredi.</p>
+                <p>Les commandes stockées en France sont généralement expédiées le jour même si la commande est passée avant 12h. Les commandes provenant de l'étranger sont expédiées sous 72 heures.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="délai livraison combien temps">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Quel est le délai de livraison ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">📦 Livraison</div>
+                <p>Si votre commande est stockée en <strong>France</strong>, la livraison s'effectue sous <strong>48 à 72 heures</strong> via La Poste.</p>
+                <p>Si votre commande provient de l'étranger, il faut compter <strong>5 à 7 jours ouvrés</strong>.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="suivi commande tracking numéro">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Comment suivre ma commande ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">🔎 Suivi</div>
+                <p>Tous nos envois incluent le suivi (100% gratuit). Lorsque votre commande est traitée, vous recevez un e-mail contenant votre <strong>numéro de suivi</strong> et le lien de tracking.</p>
+                <p>Si vous n'avez pas reçu cet e-mail, vérifiez vos spams ou contactez notre support.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="livraison gratuite frais port">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                La livraison est-elle gratuite ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">📦 Livraison</div>
+                <p>Oui, la livraison est <strong>100% gratuite</strong> sans minimum d'achat pour toutes les commandes.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="transporteur partenaire poste chronopost">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Quels sont vos transporteurs ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">📦 Transporteur</div>
+                <p>Nous travaillons principalement avec <strong>La Poste</strong> et <strong>Chronopost</strong> pour les livraisons en France, Belgique, Luxembourg et Suisse.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="livraison weekend samedi dimanche">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Livrez-vous le week-end ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">📦 Livraison</div>
+                <p>Nos partenaires livrent le <strong>samedi matin et après-midi</strong>. En revanche, la livraison le <strong>dimanche n'est pas possible</strong>.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="point relais mondial relay code pas reçu">
+              <button class="faq-article-btn" onclick="toggleFaq(this)" id="art-point-relais">
+                Je n'ai pas reçu mon code de point relais Mondial Relay — que faire ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">📦 Point relais</div>
+                <p>Si vous n'avez pas reçu votre code de retrait Mondial Relay, voici les étapes à suivre :</p>
+                <ul>
+                  <li>Vérifiez vos spams et courriers indésirables — le SMS ou l'e-mail peut y être.</li>
+                  <li>Vérifiez que le numéro de téléphone renseigné lors de la commande est correct.</li>
+                  <li>Attendez <strong>24h après la livraison du colis au point relais</strong> — le code est parfois envoyé avec un léger délai.</li>
+                  <li>Rendez-vous directement au point relais avec votre pièce d'identité — le commerçant peut parfois vous remettre le colis sans code.</li>
+                </ul>
+                <p>Si après 24h vous n'avez toujours rien reçu, contactez notre support avec votre numéro de commande.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-section-block">
+          <div class="faq-section-anchor" id="retours"></div>
+          <div class="faq-section-head"><span class="faq-section-emoji">↩</span><h3>Retours & remboursements</h3></div>
+          <div class="faq-articles">
+            <div class="faq-article-card" data-search="retour comment faire procédure portail">
+              <button class="faq-article-btn" onclick="toggleFaq(this)" id="art-faire-retour">
+                Comment faire un retour ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">↩ Retour</div>
+                <p>Vous disposez de <strong>14 jours</strong> à compter de la réception pour effectuer un retour.</p>
+                <p><strong>Étapes :</strong></p>
+                <ul>
+                  <li>Accédez à notre portail retour.</li>
+                  <li>Entrez votre numéro de commande et votre adresse e-mail.</li>
+                  <li>Sélectionnez le ou les articles à retourner et le motif.</li>
+                  <li>Imprimez ou téléchargez l'étiquette de retour fournie.</li>
+                  <li>Déposez le colis dans le point de dépôt indiqué.</li>
+                </ul>
+                <p>Le remboursement intervient sous <strong>3 à 14 jours</strong> après réception du retour, selon votre banque.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="retour produit non conforme endommagé mauvais défectueux">
+              <button class="faq-article-btn" onclick="toggleFaq(this)" id="art-non-conforme">
+                Comment faire un retour pour un produit non conforme ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">↩ Retour non conforme</div>
+                <p>Si vous avez reçu un produit <strong>endommagé, incomplet ou non conforme</strong> à votre commande :</p>
+                <ul>
+                  <li>Prenez des photos claires de l'article et de l'emballage reçu.</li>
+                  <li>Accédez à notre portail retour et sélectionnez le motif correspondant.</li>
+                  <li>Dans ce cas, <strong>les frais de retour ET de renvoi sont entièrement à notre charge</strong>.</li>
+                </ul>
+                <p>Vous pouvez choisir entre un <strong>échange</strong> ou un <strong>remboursement intégral</strong>.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="remboursement délai quand recevoir">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Quand vais-je recevoir mon remboursement ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">↩ Remboursement</div>
+                <p>Une fois votre retour réceptionné et traité, notre processeur de paiement vous crédite sous <strong>3 à 14 jours ouvrés</strong> selon votre banque.</p>
+                <p>N'hésitez pas à contacter votre banque si le délai dépasse 14 jours.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="frais retour à charge qui paye">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Qui prend en charge les frais de retour ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">↩ Frais retour</div>
+                <p><strong>Produit cassé, endommagé, incomplet ou non conforme</strong> → le retour et le renvoi sont <strong>entièrement à notre charge</strong>.</p>
+                <p><strong>Retour pour échange ou remboursement (produit conforme)</strong> → les frais de retour sont <strong>à la charge du client</strong>.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="défectueux produit retour moins 10 jours">
+              <button class="faq-article-btn" onclick="toggleFaq(this)" id="art-defectueux">
+                Mon produit est défectueux — comment faire un retour ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">⚠ Défectueux</div>
+                <p>Si votre produit présente un <strong>défaut de fabrication</strong> dans les <strong>10 jours suivant la livraison</strong> :</p>
+                <ul>
+                  <li>Accédez à notre portail retour.</li>
+                  <li>Sélectionnez « Produit défectueux » comme motif.</li>
+                  <li>Joignez des photos du défaut si possible.</li>
+                </ul>
+                <p>Le retour et le renvoi sont pris en charge par BRAND1. Au-delà de 10 jours, chaque demande est étudiée au cas par cas — contactez notre support.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-section-block">
+          <div class="faq-section-anchor" id="annulation"></div>
+          <div class="faq-section-head"><span class="faq-section-emoji">✕</span><h3>Annulation de commande</h3></div>
+          <div class="faq-articles">
+            <div class="faq-article-card" data-search="annuler commande comment procédure">
+              <button class="faq-article-btn" onclick="toggleFaq(this)" id="art-annulation">
+                Annuler ma commande — procédure
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">✕ Annulation</div>
+                <p>Vous pouvez annuler votre commande dans les <strong>24 heures suivant votre achat</strong>, à condition qu'elle n'ait pas encore été préparée ou expédiée.</p>
+                <p><strong>Comment procéder :</strong></p>
+                <ul>
+                  <li>Contactez-nous immédiatement via notre formulaire SAV.</li>
+                  <li>Indiquez votre numéro de commande et votre adresse e-mail.</li>
+                  <li>Notre équipe vérifiera le statut et annulera si possible.</li>
+                </ul>
+                <p><strong>Attention :</strong> Une commande déjà expédiée ne peut pas être annulée. Dans ce cas, vous devrez attendre la réception et effectuer un retour.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-section-block">
+          <div class="faq-section-anchor" id="suivi"></div>
+          <div class="faq-section-head"><span class="faq-section-emoji">🔎</span><h3>Suivi de colis</h3></div>
+          <div class="faq-articles">
+            <div class="faq-article-card" data-search="colis livré non reçu pas reçu marqué">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Mon colis est marqué livré mais je ne l'ai pas reçu
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">🔎 Livré non reçu</div>
+                <p>Dans un premier temps, nous vous invitons à :</p>
+                <ul>
+                  <li>Vérifier votre boîte aux lettres et les parties communes de votre immeuble.</li>
+                  <li>Vous renseigner auprès de vos voisins.</li>
+                  <li>Vérifier si un avis de passage a été déposé.</li>
+                  <li>Appeler La Poste avec votre numéro de suivi.</li>
+                </ul>
+                <p>Si le colis reste introuvable après ces vérifications, contactez notre support avec votre numéro de commande — nous ouvrirons une enquête transporteur.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-section-block">
+          <div class="faq-section-anchor" id="produits"></div>
+          <div class="faq-section-head"><span class="faq-section-emoji">⌚</span><h3>Produits</h3></div>
+          <div class="faq-articles">
+            <div class="faq-article-card" data-search="originaux garmin générique compatibles">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Vos produits sont-ils des originaux Garmin ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">⌚ Produit</div>
+                <p>Non, nos produits sont des <strong>bracelets génériques de qualité premium</strong>, compatibles avec les montres Garmin. Notre entreprise est indépendante et n'entretient aucune relation avec GARMIN LTD.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="garantie produit durée">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Proposez-vous une garantie ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">⌚ Garantie</div>
+                <p>Nous proposons une garantie couvrant les <strong>problèmes de livraison, le vol et la perte</strong>, disponible après l'achat. Renseignez-vous auprès de notre support pour en savoir plus.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-section-block">
+          <div class="faq-section-anchor" id="autres"></div>
+          <div class="faq-section-head"><span class="faq-section-emoji">💬</span><h3>Autres questions</h3></div>
+          <div class="faq-articles">
+            <div class="faq-article-card" data-search="paiement sécurisé visa mastercard">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Les paiements sont-ils sécurisés ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">💬 Paiement</div>
+                <p>Oui, nous acceptons les paiements par <strong>Visa et Mastercard</strong> via Shopify Payments et PayPal. Nous n'avons pas accès aux informations relatives à vos paiements.</p>
+              </div>
+            </div>
+
+            <div class="faq-article-card" data-search="contacter service client support">
+              <button class="faq-article-btn" onclick="toggleFaq(this)">
+                Comment vous contacter ?
+                <span class="faq-article-btn-icon">▾</span>
+              </button>
+              <div class="faq-article-body">
+                <div class="faq-article-tag">💬 Contact</div>
+                <p>Vous pouvez nous contacter via notre formulaire SAV intelligent. Nous nous engageons à vous répondre sous <strong>12h à 24h, du lundi au samedi</strong>.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-cta-band">
+          <div>
+            <h3>Vous n'avez pas trouvé votre réponse ?</h3>
+            <p>Le formulaire SAV reste disponible juste au-dessus pour les demandes qui nécessitent un traitement manuel.</p>
+          </div>
+          <a class="faq-cta-btn" href="#formPanel">Ouvrir le formulaire →</a>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script src="script.js"></script>

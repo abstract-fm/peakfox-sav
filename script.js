@@ -1,10 +1,10 @@
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const ART = {
-  annulation:  "#",
-  retour:      "#",
-  nonConforme: "#",
-  defectueux:  "#",
-  pointRelais: "#"
+  annulation:  "#annulation",
+  retour:      "#faire-retour",
+  nonConforme: "#non-conforme",
+  defectueux:  "#defectueux",
+  pointRelais: "#point-relais"
 };
 
 // ─── FIELD DEFINITIONS ────────────────────────────────────────────────────────
@@ -277,6 +277,7 @@ function renderOptions(node) {
 // ── Self-service ──────────────────────────────────────────────────────────────
 function renderSelfService(node) {
   const ss = node.selfservice;
+  const isHashLink = typeof ss.ctaHref === "string" && ss.ctaHref.startsWith("#");
   stepRoot.innerHTML = `
     <div class="result success">
       <h3>${escapeHtml(ss.title)}</h3>
@@ -284,7 +285,7 @@ function renderSelfService(node) {
     </div>
     <div class="actions" style="margin-top:24px">
       <button class="secondary-btn" id="backBtn">Retour</button>
-      <a class="primary-btn" href="${escapeHtml(ss.ctaHref)}" target="_blank" rel="noopener"
+      <a class="primary-btn" href="${escapeHtml(ss.ctaHref)}" ${isHashLink ? "" : 'target="_blank" rel="noopener"'}
          style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">
         ${escapeHtml(ss.ctaLabel)}
       </a>
@@ -456,3 +457,48 @@ function renderConfirm() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 render();
+
+function toggleFaq(btn) {
+  const body = btn.nextElementSibling;
+  const isOpen = btn.classList.contains("open");
+
+  document.querySelectorAll(".faq-article-btn").forEach((item) => {
+    item.classList.remove("open");
+    if (item.nextElementSibling) item.nextElementSibling.classList.remove("open");
+  });
+
+  if (!isOpen && body) {
+    btn.classList.add("open");
+    body.classList.add("open");
+  }
+}
+
+function filterFaqArticles(query) {
+  const normalized = String(query || "").toLowerCase().trim();
+
+  document.querySelectorAll(".faq-article-card").forEach((card) => {
+    const haystack = `${card.dataset.search || ""} ${card.textContent || ""}`.toLowerCase();
+    card.style.display = !normalized || haystack.includes(normalized) ? "" : "none";
+  });
+
+  document.querySelectorAll(".faq-section-block").forEach((block) => {
+    const visible = [...block.querySelectorAll(".faq-article-card")].some((card) => card.style.display !== "none");
+    block.style.display = visible ? "" : "none";
+  });
+}
+
+function openFaqFromHash() {
+  const hash = window.location.hash.replace("#", "");
+  if (!hash) return;
+
+  const target = document.getElementById(`art-${hash}`);
+  if (!target) return;
+
+  target.click();
+  setTimeout(() => {
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 60);
+}
+
+window.addEventListener("DOMContentLoaded", openFaqFromHash);
+window.addEventListener("hashchange", openFaqFromHash);
