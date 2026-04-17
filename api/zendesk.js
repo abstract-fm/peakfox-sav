@@ -123,6 +123,21 @@ module.exports = async function handler(req, res) {
 
   const referenceLabel = orderNumber ? `Commande ${orderNumber}` : `Retour ${returnId}`;
   const subject = `[SAV] ${category || "Demande"} - ${subIssue || ""} - ${referenceLabel}`;
+  const resolvedClientNote =
+    note ||
+    formValues?.modifDetail ||
+    formValues?.annulRaison ||
+    formValues?.defect_context ||
+    formValues?.retour_suivi_context ||
+    formValues?.retour_remb_context ||
+    formValues?.retour_echange_context ||
+    formValues?.retour_bloque_context ||
+    formValues?.suivi_retard_context ||
+    formValues?.suivi_bloque_context ||
+    formValues?.suivi_perdu_context ||
+    formValues?.suivi_relais_context ||
+    formValues?.suivi_non_recu_context ||
+    "";
 
   const body = `
 ${agentRecap || ""}
@@ -137,7 +152,7 @@ Details techniques du formulaire :
 - Categorie ID       : ${categoryId || "Non renseigne"}
 - Sous-sujet ID      : ${subIssueId || "Non renseigne"}
 - Chemin             : ${path || "Non renseigne"}
-- Note client        : ${note || "Aucune"}
+- Note client        : ${resolvedClientNote || "Aucune"}
   `.trim();
 
   const context = {
@@ -145,7 +160,7 @@ Details techniques du formulaire :
     orderNumber,
     tracking,
     returnId,
-    note,
+    note: resolvedClientNote,
     returnOpened,
     category,
     categoryId,
