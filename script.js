@@ -1,831 +1,458 @@
-const FIELD_DEFS = {
-  email: {
-    type: "email",
-    label: "Adresse e-mail*",
-    placeholder: "vous@email.com",
-    required: true
-  },
-  orderNumber: {
-    type: "text",
-    label: "Numéro de commande*",
-    placeholder: "Ex : #124324",
-    required: true
-  },
-  tracking: {
-    type: "text",
-    label: "Numéro de suivi*",
-    placeholder: "Numéro de suivi",
-    required: true
-  },
-  returnId: {
-    type: "text",
-    label: "ID ReturnGO*",
-    placeholder: "Ex : RTG-12345",
-    required: true
-  },
-  photoUpload: {
-    type: "file",
-    label: "Photo",
-    accept: "image/*",
-    required: false
-  },
-  proofUpload: {
-    type: "file",
-    label: "Preuve / suivi du retour",
-    required: false
-  },
-  note: {
-    type: "textarea",
-    label: "Informations complémentaires (optionnel)",
-    placeholder: "Ajoutez un détail utile si besoin",
-    required: false
-  },
-  returnOpened: {
-    type: "checkbox",
-    label: "J’ai déjà ouvert un retour",
-    required: false
-  }
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const ART = {
+  annulation:  "#",
+  retour:      "#",
+  nonConforme: "#",
+  defectueux:  "#",
+  pointRelais: "#"
 };
 
+// ─── FIELD DEFINITIONS ────────────────────────────────────────────────────────
+const FIELD_DEFS = {
+  email:                  { type: "email",    label: "Adresse e-mail*",                          placeholder: "vous@email.com",                                                              required: true  },
+  orderNumber:            { type: "text",     label: "Numéro de commande*",                      placeholder: "#12345",                                                                      required: true  },
+  orderDate:              { type: "text",     label: "Date de la commande",                      placeholder: "jj/mm/aaaa",                                                                  required: false },
+  returnId:               { type: "text",     label: "Numéro / ID du retour*",                   placeholder: "RTG-12345",                                                                   required: true  },
+  modifDetail:            { type: "textarea", label: "Détail de la modification*",               placeholder: "Décrivez ce que vous souhaitez modifier…",                                    required: true  },
+  annulRaison:            { type: "textarea", label: "Raison de la demande d'annulation*",       placeholder: "Pourquoi souhaitez-vous annuler ? Depuis combien de temps ?",                 required: true,
+                            hint: "Soyez précis — cela nous permet de traiter votre demande plus rapidement." },
+  suivi_retard_context:   { type: "textarea", label: "Contexte du retard*",                      placeholder: "Depuis combien de temps ? Dernier statut affiché ? Date d'expédition ?",     required: true  },
+  suivi_bloque_context:   { type: "textarea", label: "Informations sur le blocage*",             placeholder: "Numéro de suivi, date d'expédition, transporteur, dernier statut…",          required: true  },
+  suivi_perdu_context:    { type: "textarea", label: "Informations sur la perte*",               placeholder: "Numéro de suivi, date d'expédition, depuis combien de temps sans MAJ…",     required: true  },
+  suivi_relais_context:   { type: "textarea", label: "Description du problème*",                 placeholder: "Nom et adresse du point relais, nature du problème…",                        required: true  },
+  checkVoisins:           { type: "checkbox", label: "J'ai vérifié auprès de mes voisins / concierge si le colis n'a pas été livré chez eux", required: true },
+  suivi_non_recu_context: { type: "textarea", label: "Décrivez la situation*",                   placeholder: "Depuis quand indique-t-il livré ? Avis de passage ? Contact transporteur ?", required: true  },
+  retour_suivi_context:   { type: "textarea", label: "Contexte de votre demande",                placeholder: "Décrivez votre situation…",                                                   required: false },
+  retour_remb_context:    { type: "textarea", label: "Contexte de votre demande",                placeholder: "Date du retour, montant attendu…",                                            required: false },
+  retour_echange_context: { type: "textarea", label: "Contexte de votre demande",                placeholder: "Décrivez le problème avec votre échange…",                                    required: false },
+  retour_bloque_context:  { type: "textarea", label: "Décrivez le problème rencontré*",          placeholder: "Que se passe-t-il ? Message d'erreur ?",                                      required: true  },
+  defect_context:         { type: "textarea", label: "Description du défaut*",                   placeholder: "Décrivez précisément le défaut, depuis quand il est apparu…",                 required: true  },
+  photoUpload_opt:        { type: "file",     label: "Joindre une pièce jointe (optionnel)",     required: false },
+  photoUpload_req:        { type: "file",     label: "Joindre une pièce jointe obligatoire (photo ou capture d'écran)*", required: true }
+};
+
+// ─── FLOW ─────────────────────────────────────────────────────────────────────
 const FLOW = {
+  rootQuestion: "Pourquoi nous contactez-vous ?",
   categories: [
     {
-      id: "annulation",
-      label: "Annulation",
+      id: "annulation", label: "Annulation de commande",
+      question: "Depuis combien de temps avez-vous passé votre commande ?",
       children: [
         {
-          id: "moins_24h",
-          label: "Moins de 24h",
-          title: "Annulation sous 24h",
-          fields: ["email", "orderNumber", "returnOpened"],
-          hints: [
-            "Annulation possible si la commande est encore dans la fenêtre autorisée."
-          ],
-          resolve: () => ({
-            tone: "success",
-            title: "Annulation potentiellement possible",
-            text: "La demande est dans la bonne fenêtre. Vérifiez maintenant le statut réel de la commande avant annulation.",
-            summary: "Action suggérée : vérification Shopify / Shippingbo puis annulation si non expédiée."
-          })
+          id: "annul_moins_24h", label: "Moins de 24h",
+          outcome: "selfservice",
+          selfservice: {
+            title: "Annulation sous 24h",
+            body: "Bonne nouvelle — votre commande est peut-être encore annulable ! Consultez notre article dédié pour suivre la procédure en autonomie.",
+            ctaLabel: "Annuler ma commande →", ctaHref: ART.annulation
+          }
         },
         {
-          id: "plus_24h",
-          label: "Plus de 24h",
-          title: "Annulation après 24h",
-          fields: ["email", "orderNumber"],
-          linkBox: {
-            text: "L’annulation n’est généralement plus possible après 24h. Consultez l’article d’explication puis passez par le retour si applicable.",
-            linkLabel: "Voir l’article",
-            href: "#"
-          },
-          resolve: () => ({
-            tone: "warning",
-            title: "Annulation non standard",
-            text: "Au-delà de 24h, l’annulation n’est généralement plus possible. Orientez vers l’article puis vers le flux retour.",
-            summary: "Action suggérée : article explicatif + redirection retour."
-          })
-        },
-        {
-          id: "deja_retour",
-          label: "J’ai déjà un retour",
-          title: "Retour déjà ouvert",
-          fields: ["email", "orderNumber", "returnId"],
-          hints: [
-            "Utilisé si un retour ReturnGO existe déjà."
-          ],
-          resolve: () => ({
-            tone: "success",
-            title: "Retour existant identifié",
-            text: "Le dossier peut être repris à partir de l’ID ReturnGO existant.",
-            summary: "Action suggérée : lookup ReturnGO."
-          })
+          id: "annul_plus_24h", label: "Plus de 24h",
+          outcome: "ticket",
+          topText: "⚠️ Cette demande est hors procédure standard. Nous allons vérifier le statut de votre commande. Si elle est déjà expédiée, l'annulation ne sera pas possible.",
+          fields: ["email", "orderNumber", "annulRaison"],
+          agentNote: "Vérifier Shopify/Shippingbo si commande expédiée."
         }
       ]
     },
     {
-      id: "retour",
-      label: "Retour",
+      id: "modification", label: "Modification de commande",
+      outcome: "ticket",
+      topText: "Décrivez précisément ce que vous souhaitez modifier (adresse, article, taille, couleur…).",
+      fields: ["email", "orderNumber", "modifDetail"],
+      agentNote: "Vérifier Shopify/Shippingbo. NON expédiée→modifier. OUI→orienter vers retour."
+    },
+    {
+      id: "suivi", label: "Problème avec le suivi",
+      question: "Quel est votre problème ?",
       children: [
         {
-          id: "moins_14j",
-          label: "Retour à moins de 14 jours",
-          title: "Retour à moins de 14 jours",
-          fields: ["email", "orderNumber", "returnOpened"],
-          linkBox: {
-            text: "Retour possible dans la fenêtre de 14 jours via ReturnGO.",
-            linkLabel: "Accéder à ReturnGO",
-            href: "#"
-          },
-          resolve: () => ({
-            tone: "success",
-            title: "Retour standard éligible",
-            text: "Le client est dans la fenêtre de 14 jours et peut être redirigé vers ReturnGO.",
-            summary: "Action suggérée : afficher / envoyer lien ReturnGO."
-          })
+          id: "suivi_pas_suivi", label: "Retard expédition — pas encore de suivi",
+          outcome: "ticket",
+          fields: ["email", "orderNumber", "orderDate"],
+          agentNote: "Vérifier statut Shippingbo."
         },
         {
-          id: "plus_14j",
-          label: "Retour à plus de 14 jours",
-          title: "Retour à plus de 14 jours",
-          fields: ["email", "orderNumber"],
-          hints: [
-            "Au-delà de 14 jours, le retour standard n’est plus éligible."
-          ],
-          resolve: () => ({
-            tone: "warning",
-            title: "Retour standard non éligible",
-            text: "Le délai de 14 jours semble dépassé. Ce cas doit sortir du flux retour standard.",
-            summary: "Action suggérée : refus ou revue manuelle selon politique."
-          })
+          id: "suivi_retard", label: "Retard du transporteur",
+          outcome: "ticket",
+          topText: "💬 Depuis combien de temps attendez-vous ? Quel est le dernier statut affiché ?",
+          fields: ["email", "orderNumber", "suivi_retard_context", "photoUpload_opt"],
+          agentNote: "Vérifier tracking. Ouvrir enquête si retard >5j."
         },
         {
-          id: "cant_do_it",
-          label: "Je n’arrive pas à faire le retour",
-          title: "Je n’arrive pas à faire le retour",
-          fields: ["email", "orderNumber", "returnOpened", "returnId", "proofUpload"],
-          linkBox: {
-            text: "Si le portail ne fonctionne pas, ajoutez une preuve ou un suivi du retour.",
-            linkLabel: "Aide retour",
-            href: "#"
-          },
-          resolve: () => ({
-            tone: "warning",
-            title: "Blocage sur le portail retour",
-            text: "Le client n’arrive pas à effectuer son retour. Une assistance manuelle ou une reprise du dossier est nécessaire.",
-            summary: "Action suggérée : aide manuelle + vérification ReturnGO."
-          })
+          id: "suivi_bloque", label: "Commande bloquée chez le transporteur",
+          outcome: "ticket",
+          topText: "📋 Un colis bloqué ne doit pas avoir eu de mise à jour depuis au moins 3 jours.",
+          fields: ["email", "orderNumber", "suivi_bloque_context", "photoUpload_opt"],
+          agentNote: "Contacter transporteur pour déblocage."
         },
         {
-          id: "pb_remboursement",
-          label: "Problème remboursement / délai",
-          title: "Problème remboursement / délai",
-          fields: ["email", "orderNumber", "returnOpened", "returnId", "proofUpload"],
-          resolve: () => ({
-            tone: "warning",
-            title: "Problème remboursement / délai",
-            text: "Le retour existe mais le remboursement ou son délai pose problème.",
-            summary: "Action suggérée : contrôle statut retour + statut remboursement."
-          })
+          id: "suivi_perdu", label: "Commande perdue par le transporteur",
+          outcome: "ticket",
+          topText: "📋 Un colis est considéré perdu après au moins 5 jours sans mise à jour de suivi.",
+          fields: ["email", "orderNumber", "suivi_perdu_context", "photoUpload_opt"],
+          agentNote: "Ouvrir enquête transporteur."
         },
         {
-          id: "echange_produit",
-          label: "Échange produit",
-          title: "Échange produit",
-          fields: ["email", "orderNumber", "returnOpened", "returnId", "note"],
-          resolve: () => ({
-            tone: "success",
-            title: "Demande d’échange capturée",
-            text: "La demande d’échange peut être routée selon les règles de stock, variante et politique SAV.",
-            summary: "Action suggérée : contrôle stock + workflow échange."
-          })
+          id: "suivi_relais", label: "Problème avec un point relais",
+          outcome: "ticket",
+          topText: "📋 Indiquez le nom et l'adresse du point relais ainsi que la nature du problème.",
+          fields: ["email", "orderNumber", "suivi_relais_context", "photoUpload_opt"],
+          extraLink: { label: "Je n'ai pas reçu mon code Mondial Relay — que faire ?", href: ART.pointRelais },
+          agentNote: "Vérifier suivi au point relais."
         },
         {
-          id: "cheminement_retour",
-          label: "Suivi / cheminement retour",
-          title: "Cheminement retour",
-          fields: ["email", "orderNumber", "returnOpened", "returnId", "proofUpload"],
-          resolve: () => ({
-            tone: "success",
-            title: "Suivi retour capturé",
-            text: "Le client demande le cheminement du retour. Le dossier peut être vérifié à partir du suivi ou de ReturnGO.",
-            summary: "Action suggérée : lookup tracking / ReturnGO."
-          })
+          id: "suivi_livre_non_recu", label: "Marqué livré mais non reçu",
+          outcome: "ticket",
+          topText: "📋 Avant de soumettre, merci de vérifier auprès de vos voisins / concierge.",
+          fields: ["checkVoisins", "email", "orderNumber", "suivi_non_recu_context", "photoUpload_req"],
+          agentNote: "Vérifier preuve de livraison transporteur."
         }
       ]
     },
     {
-      id: "defectueux_reception",
-      label: "Défectueux / Réception",
+      id: "reception", label: "J'ai reçu ma commande mais j'ai un problème",
+      topBanner: "⚠️ Passé 7 jours après la réception, il n'est plus possible de traiter ces demandes.",
+      question: "Quel est le problème à la réception ?",
       children: [
         {
-          id: "produit_casse",
-          label: "Produit cassé",
-          title: "Produit cassé",
-          fields: ["email", "orderNumber", "photoUpload", "note"],
-          resolve: (values) => ({
-            tone: "success",
-            title: "Cas réception validable avec preuve",
-            text: values.photoUpload
-              ? "Une photo a été ajoutée. Le dossier peut être traité plus vite."
-              : "Aucune photo ajoutée. Une preuve visuelle peut être demandée avant résolution.",
-            summary: "Action suggérée : remplacement / enquête / crédit selon politique."
-          })
+          id: "recep_endommage", label: "Produit endommagé",
+          outcome: "selfservice",
+          selfservice: { title: "Produit endommagé", body: "Consultez notre article pour la procédure de retour / échange pour produit non conforme.", ctaLabel: "Voir l'article →", ctaHref: ART.nonConforme }
         },
         {
-          id: "wrong_one",
-          label: "Mauvais produit reçu",
-          title: "Mauvais produit reçu",
-          fields: ["email", "orderNumber", "photoUpload", "note"],
-          resolve: (values) => ({
-            tone: "success",
-            title: "Cas réception validable avec preuve",
-            text: values.photoUpload
-              ? "Une photo a été ajoutée. Le dossier peut être traité plus vite."
-              : "Aucune photo ajoutée. Une preuve visuelle peut être demandée avant résolution.",
-            summary: "Action suggérée : remplacement / enquête / crédit selon politique."
-          })
+          id: "recep_manquant", label: "Produit(s) manquant(s)",
+          outcome: "selfservice",
+          selfservice: { title: "Produit manquant", body: "Un article manquait dans votre colis ? Consultez notre article pour la procédure.", ctaLabel: "Voir l'article →", ctaHref: ART.nonConforme }
         },
         {
-          id: "manque_produit",
-          label: "Produit manquant",
-          title: "Produit manquant",
-          fields: ["email", "orderNumber", "note"],
-          resolve: () => ({
-            tone: "success",
-            title: "Produit manquant signalé",
-            text: "Le dossier peut être vérifié via la commande et le contenu expédié.",
-            summary: "Action suggérée : contrôle préparation / logistique."
-          })
+          id: "recep_mauvais", label: "Mauvais produit reçu",
+          outcome: "selfservice",
+          selfservice: { title: "Mauvais produit reçu", body: "Vous avez reçu un article qui n'est pas le vôtre ? Consultez notre article pour la procédure d'échange.", ctaLabel: "Voir l'article →", ctaHref: ART.nonConforme }
         }
       ]
     },
     {
-      id: "expedition",
-      label: "Expédition",
+      id: "retour", label: "Retour",
+      question: "Avez-vous déjà initié un retour pour cette commande ?",
       children: [
         {
-          id: "pas_traite",
-          label: "Commande non traitée",
-          title: "Commande non traitée",
-          fields: ["email", "orderNumber"],
-          hints: [
-            "Cas expédition : commande non encore traitée."
-          ],
-          resolve: () => ({
-            tone: "warning",
-            title: "Commande non traitée",
-            text: "Le dossier concerne l’expédition avant transit. Vérifier l’état de préparation de la commande.",
-            summary: "Action suggérée : contrôle Shippingbo / préparation."
-          })
+          id: "retour_oui", label: "Oui, j'ai déjà un retour en cours",
+          question: "Quel est votre problème avec ce retour ?",
+          children: [
+            {
+              id: "retour_suivi", label: "Je veux suivre mon retour",
+              outcome: "ticket",
+              fields: ["email", "returnId", "retour_suivi_context", "photoUpload_opt"],
+              agentNote: "Vérifier statut retour dans ReturnGO."
+            },
+            {
+              id: "retour_remb", label: "Problème de remboursement",
+              outcome: "ticket",
+              fields: ["email", "returnId", "retour_remb_context", "photoUpload_opt"],
+              agentNote: "Vérifier statut remboursement Shopify/ReturnGO."
+            },
+            {
+              id: "retour_echange", label: "Problème avec mon échange",
+              outcome: "ticket",
+              fields: ["email", "returnId", "retour_echange_context", "photoUpload_opt"],
+              agentNote: "Vérifier workflow échange ReturnGO."
+            }
+          ]
+        },
+        {
+          id: "retour_non", label: "Non, je veux faire un retour",
+          outcome: "selfservice",
+          selfservice: { title: "Initiez votre retour en ligne", body: "La procédure est simple et rapide via notre portail dédié.", ctaLabel: "Accéder au portail retour →", ctaHref: ART.retour }
+        },
+        {
+          id: "retour_bloque", label: "J'ai essayé mais ça ne fonctionne pas",
+          outcome: "ticket",
+          topText: "Décrivez le problème rencontré. Une pièce jointe (capture d'écran) est requise.",
+          fields: ["email", "orderNumber", "retour_bloque_context", "photoUpload_req"],
+          agentNote: "Vérifier éligibilité ReturnGO. Créer retour manuellement si besoin."
         }
       ]
     },
     {
-      id: "transit",
-      label: "Transit",
+      id: "defectueux", label: "Défectueux",
+      question: "Depuis combien de temps votre colis a-t-il été livré ?",
       children: [
         {
-          id: "retard",
-          label: "Retard",
-          title: "Retard de transit",
-          fields: ["email", "orderNumber", "tracking"],
-          hints: [
-            "Le suivi est requis pour les cas de transit."
-          ],
-          resolve: () => ({
-            tone: "warning",
-            title: "Retard",
-            text: "Le dossier transit est prêt à être traité à partir du numéro de suivi.",
-            summary: "Action suggérée : enquête transporteur / support agent."
-          })
+          id: "defect_moins_10j", label: "Moins de 10 jours",
+          outcome: "selfservice",
+          selfservice: { title: "Produit défectueux — sous 10 jours", body: "Vous êtes dans le délai pour faire une demande via notre portail.", ctaLabel: "Produit défectueux — faire un retour →", ctaHref: ART.defectueux }
         },
         {
-          id: "bloque",
-          label: "Bloqué",
-          title: "Colis bloqué",
-          fields: ["email", "orderNumber", "tracking"],
-          hints: [
-            "Le suivi est requis pour les cas de transit."
-          ],
-          resolve: () => ({
-            tone: "warning",
-            title: "Bloqué",
-            text: "Le dossier transit est prêt à être traité à partir du numéro de suivi.",
-            summary: "Action suggérée : enquête transporteur / support agent."
-          })
-        },
-        {
-          id: "perdu",
-          label: "Perdu",
-          title: "Colis perdu",
-          fields: ["email", "orderNumber", "tracking"],
-          hints: [
-            "Le suivi est requis pour les cas de transit."
-          ],
-          resolve: () => ({
-            tone: "danger",
-            title: "Perdu",
-            text: "Le dossier transit est prêt à être traité à partir du numéro de suivi.",
-            summary: "Action suggérée : enquête transporteur / support agent."
-          })
-        },
-        {
-          id: "livre_non_recu",
-          label: "Livré non reçu",
-          title: "Livré non reçu",
-          fields: ["email", "orderNumber", "tracking"],
-          hints: [
-            "Le suivi est requis pour les cas de transit."
-          ],
-          resolve: () => ({
-            tone: "danger",
-            title: "Livré non reçu",
-            text: "Le dossier transit est prêt à être traité à partir du numéro de suivi.",
-            summary: "Action suggérée : enquête transporteur / support agent."
-          })
-        }
-      ]
-    },
-    {
-      id: "modification_commande",
-      label: "Modification commande",
-      children: [
-        {
-          id: "modif_cmd",
-          label: "Modifier ma commande",
-          title: "Modifier la commande",
-          fields: ["email", "orderNumber", "note"],
-          hints: [
-            "Numéro de commande requis. Plus tard, lookup possible via API Shopify."
-          ],
-          resolve: () => ({
-            tone: "success",
-            title: "Demande de modification capturée",
-            text: "La demande peut être traitée selon le statut réel d’expédition de la commande.",
-            summary: "Action suggérée : vérifier le script modif + Shopify."
-          })
+          id: "defect_plus_10j", label: "Plus de 10 jours",
+          outcome: "ticket",
+          topText: "⚠️ Votre demande est hors délai standard (10 jours). Elle sera étudiée au cas par cas.",
+          fields: ["email", "orderNumber", "defect_context", "photoUpload_req"],
+          agentNote: "Défectueux hors délai. Étudier au cas par cas."
         }
       ]
     }
   ]
 };
 
-const EMPTY_VALUES = {
-  email: "",
-  orderNumber: "",
-  tracking: "",
-  returnId: "",
-  note: "",
-  returnOpened: false,
-  photoUpload: false,
-  proofUpload: false
-};
-
+// ─── STATE ────────────────────────────────────────────────────────────────────
 const state = {
-  step: 1,
-  category: "",
-  subIssue: "",
-  values: { ...EMPTY_VALUES },
-  result: null
+  path:     [],
+  values:   {},
+  done:     false,
+  ticketId: null
 };
 
-const stepRoot = document.getElementById("stepRoot");
-const resultRoot = document.getElementById("resultRoot");
+// ─── DOM REFS ─────────────────────────────────────────────────────────────────
+const stepRoot    = document.getElementById("stepRoot");
+const resultRoot  = document.getElementById("resultRoot");
 const progressBar = document.getElementById("progressBar");
-const stepLabel = document.getElementById("stepLabel");
-const pathLabel = document.getElementById("pathLabel");
+const stepLabel   = document.getElementById("stepLabel");
+const pathLabel   = document.getElementById("pathLabel");
 
-function getCategory(id) {
-  return FLOW.categories.find((category) => category.id === id) || null;
-}
-
-function getSubIssue() {
-  const category = getCategory(state.category);
-  if (!category) return null;
-  return category.children.find((item) => item.id === state.subIssue) || null;
-}
-
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
 function escapeHtml(str) {
   return String(str || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
+    .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;").replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
 
-function resetFlow(full = true) {
-  Object.assign(state, {
-    step: 1,
-    category: full ? "" : state.category,
-    subIssue: "",
-    values: { ...EMPTY_VALUES },
-    result: null
-  });
+function currentNode() {
+  return state.path.length ? state.path[state.path.length - 1] : null;
 }
 
 function updateMeta() {
-  stepLabel.textContent = `Étape ${state.result ? 3 : state.step} / 3`;
-
-  const category = getCategory(state.category);
-  const subIssue = getSubIssue();
-  const path = [];
-
-  if (category) path.push(category.label);
-  if (subIssue) path.push(subIssue.label);
-
-  pathLabel.textContent = path.length ? path.join(" → ") : "Aucun chemin sélectionné";
-
-  let progress = 15;
-  if (state.step === 2) progress = 50;
-  if (state.step === 3 || state.result) progress = 90;
-  progressBar.style.width = `${progress}%`;
+  const depth = state.path.length;
+  const pct   = Math.min(Math.round((depth / 3) * 88) + 6, 92);
+  progressBar.style.width = `${pct}%`;
+  stepLabel.textContent   = `Étape ${Math.min(depth + 1, 3)} / 3`;
+  pathLabel.textContent   = state.path.length
+    ? state.path.map(n => n.label).join(" → ")
+    : "Aucun chemin sélectionné";
 }
 
+// ─── RENDER ───────────────────────────────────────────────────────────────────
 function render() {
   updateMeta();
   resultRoot.classList.add("hidden");
   resultRoot.innerHTML = "";
+  stepRoot.innerHTML   = "";
 
-  if (state.result) {
-    stepRoot.innerHTML = "";
-    renderResult();
-    return;
-  }
+  if (state.done)   { renderConfirm(); return; }
 
-  if (state.step === 1) renderCategoryStep();
-  if (state.step === 2) renderSubIssueStep();
-  if (state.step === 3) renderDynamicStep();
+  const node = currentNode();
+  if (!node)                                    { renderOptions({ question: FLOW.rootQuestion, children: FLOW.categories }); return; }
+  if (node.children && node.children.length)    { renderOptions(node); return; }
+  if (node.outcome === "selfservice")            { renderSelfService(node); return; }
+  renderForm(node);
 }
 
-function renderCategoryStep() {
+// ── Options ───────────────────────────────────────────────────────────────────
+function renderOptions(node) {
+  const items = node.children || FLOW.categories;
+
   stepRoot.innerHTML = `
-    <h2 class="question">Veuillez sélectionner la catégorie de votre problème</h2>
+    ${node.topBanner ? `<div class="hint" style="margin-bottom:18px">${escapeHtml(node.topBanner)}</div>` : ""}
+    <h2 class="question">${escapeHtml(node.question || node.label || FLOW.rootQuestion)}</h2>
     <div class="options">
-      ${FLOW.categories.map((category) => `
-        <button class="option-btn" data-category="${category.id}">
-          ${category.label}
-        </button>
-      `).join("")}
+      ${items.map(c => `<button class="option-btn" data-id="${escapeHtml(c.id)}">${escapeHtml(c.label)}</button>`).join("")}
     </div>
+    ${state.path.length ? `<div class="actions"><button class="secondary-btn" id="backBtn">Retour</button></div>` : ""}
   `;
 
-  document.querySelectorAll("[data-category]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.category = button.dataset.category;
-      state.step = 2;
-      render();
+  stepRoot.querySelectorAll(".option-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const child = items.find(c => c.id === btn.dataset.id);
+      if (child) { state.path.push(child); render(); }
     });
   });
+
+  const back = stepRoot.querySelector("#backBtn");
+  if (back) back.addEventListener("click", () => { state.path.pop(); render(); });
 }
 
-function renderSubIssueStep() {
-  const category = getCategory(state.category);
-  if (!category) return;
-
+// ── Self-service ──────────────────────────────────────────────────────────────
+function renderSelfService(node) {
+  const ss = node.selfservice;
   stepRoot.innerHTML = `
-    <h2 class="question">${category.label}</h2>
-    <div class="options">
-      ${category.children.map((item) => `
-        <button class="option-btn" data-subissue="${item.id}">
-          ${item.label}
-        </button>
-      `).join("")}
+    <div class="result success">
+      <h3>${escapeHtml(ss.title)}</h3>
+      <p>${escapeHtml(ss.body)}</p>
     </div>
+    <div class="actions" style="margin-top:24px">
+      <button class="secondary-btn" id="backBtn">Retour</button>
+      <a class="primary-btn" href="${escapeHtml(ss.ctaHref)}" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">
+        ${escapeHtml(ss.ctaLabel)}
+      </a>
+    </div>
+  `;
+  stepRoot.querySelector("#backBtn").addEventListener("click", () => { state.path.pop(); render(); });
+}
 
+// ── Form ──────────────────────────────────────────────────────────────────────
+function renderForm(node) {
+  const fields = node.fields || [];
+  stepRoot.innerHTML = `
+    ${node.topText ? `<div class="hint" style="margin-bottom:18px">${escapeHtml(node.topText)}</div>` : ""}
+    <div class="stack">
+      ${fields.map(renderField).join("")}
+      ${node.extraLink ? `
+        <div class="link-box">
+          <a href="${escapeHtml(node.extraLink.href)}" target="_blank" rel="noopener">
+            🔗 ${escapeHtml(node.extraLink.label)}
+          </a>
+        </div>` : ""}
+    </div>
+    <div id="errBox" class="result danger hidden" style="margin-top:16px"></div>
     <div class="actions">
       <button class="secondary-btn" id="backBtn">Retour</button>
+      <button class="primary-btn"   id="sendBtn">Envoyer ma demande</button>
     </div>
   `;
 
-  document.getElementById("backBtn").addEventListener("click", () => {
-    resetFlow(true);
-    render();
-  });
-
-  document.querySelectorAll("[data-subissue]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.subIssue = button.dataset.subissue;
-      state.step = 3;
-      render();
-    });
-  });
+  bindFieldEvents(fields);
+  stepRoot.querySelector("#backBtn").addEventListener("click", () => { state.path.pop(); render(); });
+  stepRoot.querySelector("#sendBtn").addEventListener("click", () => submitForm(node));
 }
 
-function renderField(fieldKey) {
-  const def = FIELD_DEFS[fieldKey];
-  const value = state.values[fieldKey];
-
+function renderField(key) {
+  const def = FIELD_DEFS[key];
   if (!def) return "";
+  const val = state.values[key] || "";
 
-  if (def.type === "checkbox") {
-    return `
-      <label class="inline-check">
-        <input id="${fieldKey}" type="checkbox" ${value ? "checked" : ""} />
-        <span>${def.label}</span>
-      </label>
-    `;
-  }
+  if (def.type === "checkbox") return `
+    <label class="inline-check">
+      <input id="f-${key}" type="checkbox" ${val ? "checked" : ""} />
+      <span>${def.label}</span>
+    </label>`;
 
-  if (def.type === "textarea") {
-    return `
-      <div class="field">
-        <label for="${fieldKey}">${def.label}</label>
-        <textarea id="${fieldKey}" placeholder="${escapeHtml(def.placeholder || "")}">${escapeHtml(value || "")}</textarea>
-      </div>
-    `;
-  }
+  if (def.type === "textarea") return `
+    <div class="field">
+      <label for="f-${key}">${def.label}</label>
+      <textarea id="f-${key}" placeholder="${escapeHtml(def.placeholder || "")}">${escapeHtml(val)}</textarea>
+      ${def.hint ? `<small style="color:#8b7355;font-size:13px">ℹ️ ${escapeHtml(def.hint)}</small>` : ""}
+    </div>`;
 
-  if (def.type === "file") {
-    const accept = def.accept ? `accept="${def.accept}"` : "";
-    return `
-      <div class="field">
-        <label for="${fieldKey}">${def.label}</label>
-        <input id="${fieldKey}" type="file" ${accept} />
-      </div>
-    `;
-  }
+  if (def.type === "file") return `
+    <div class="field">
+      <label for="f-${key}">${def.label}</label>
+      <input id="f-${key}" type="file" accept="image/*,.pdf,.doc,.docx" />
+    </div>`;
 
   return `
     <div class="field">
-      <label for="${fieldKey}">${def.label}</label>
-      <input
-        id="${fieldKey}"
-        type="${def.type}"
-        placeholder="${escapeHtml(def.placeholder || "")}"
-        value="${escapeHtml(value || "")}"
-      />
-    </div>
-  `;
-}
-
-function renderDynamicStep() {
-  const subIssue = getSubIssue();
-  if (!subIssue) return;
-
-  stepRoot.innerHTML = `
-    <h2 class="question">${subIssue.title}</h2>
-    <div class="stack">
-      ${subIssue.fields.map(renderField).join("")}
-
-      ${subIssue.hints ? subIssue.hints.map((hint) => `
-        <div class="hint">${hint}</div>
-      `).join("") : ""}
-
-      ${subIssue.linkBox ? `
-        <div class="link-box">
-          ${subIssue.linkBox.text}<br />
-          <a href="${subIssue.linkBox.href}">${subIssue.linkBox.linkLabel}</a>
-        </div>
-      ` : ""}
-    </div>
-
-    <div class="actions">
-      <button class="secondary-btn" id="backToSubBtn">Retour</button>
-      <button class="primary-btn" id="continueBtn">Continuer</button>
-    </div>
-  `;
-
-  bindFieldEvents(subIssue.fields);
-
-  document.getElementById("backToSubBtn").addEventListener("click", () => {
-    state.step = 2;
-    state.result = null;
-    render();
-  });
-
-  document.getElementById("continueBtn").addEventListener("click", resolveFlow);
+      <label for="f-${key}">${def.label}</label>
+      <input id="f-${key}" type="${def.type}" placeholder="${escapeHtml(def.placeholder || "")}" value="${escapeHtml(val)}" />
+    </div>`;
 }
 
 function bindFieldEvents(fields) {
-  fields.forEach((fieldKey) => {
-    const element = document.getElementById(fieldKey);
-    const def = FIELD_DEFS[fieldKey];
-
-    if (!element || !def) return;
-
-    if (def.type === "checkbox") {
-      element.addEventListener("change", (event) => {
-        state.values[fieldKey] = event.target.checked;
-      });
-      return;
-    }
-
-    if (def.type === "file") {
-      element.addEventListener("change", (event) => {
-        state.values[fieldKey] = Boolean(event.target.files && event.target.files.length);
-      });
-      return;
-    }
-
-    element.addEventListener("input", (event) => {
-      state.values[fieldKey] = event.target.value.trim();
-    });
+  fields.forEach(key => {
+    const el  = document.getElementById("f-" + key);
+    const def = FIELD_DEFS[key];
+    if (!el || !def) return;
+    if (def.type === "checkbox")      el.addEventListener("change", e => { state.values[key] = e.target.checked; });
+    else if (def.type === "file")     el.addEventListener("change", e => { state.values[key] = e.target.files && e.target.files.length > 0; });
+    else                              el.addEventListener("input",  e => { state.values[key] = e.target.value.trim(); });
   });
 }
 
-function validateFields(subIssue) {
-  for (const fieldKey of subIssue.fields) {
-    const def = FIELD_DEFS[fieldKey];
+// ── Validation ────────────────────────────────────────────────────────────────
+function validate(node) {
+  for (const key of (node.fields || [])) {
+    const def = FIELD_DEFS[key];
     if (!def || !def.required) continue;
-
-    if (def.type === "checkbox" || def.type === "file") continue;
-
-    const value = state.values[fieldKey];
-    if (!value || !String(value).trim()) {
-      alert(`Merci de renseigner : ${def.label}`);
-      return false;
-    }
+    const val = state.values[key];
+    if (def.type === "checkbox" && !val) return `Veuillez cocher : "${def.label}"`;
+    if (def.type === "file"     && !val) return "Une pièce jointe est obligatoire pour cette demande.";
+    if (def.type !== "checkbox" && def.type !== "file" && (!val || !String(val).trim()))
+      return `Le champ "${(def.label || key).replace("*", "")}" est requis.`;
   }
-
-  return true;
+  return null;
 }
 
-function refreshValuesFromDom(subIssue) {
-  subIssue.fields.forEach((fieldKey) => {
-    const def = FIELD_DEFS[fieldKey];
-    const element = document.getElementById(fieldKey);
-
-    if (!def || !element) return;
-
-    if (def.type === "checkbox") {
-      state.values[fieldKey] = element.checked;
-      return;
-    }
-
-    if (def.type === "file") {
-      state.values[fieldKey] = Boolean(element.files && element.files.length);
-      return;
-    }
-
-    state.values[fieldKey] = element.value.trim();
-  });
-}
-
-function formatValueForRecap(fieldKey, value) {
-  if (typeof value === "boolean") {
-    return value ? "Oui" : "Non";
-  }
-
-  if (!value) {
-    if (fieldKey === "photoUpload" || fieldKey === "proofUpload") {
-      return "Non fourni";
-    }
-    return "Non renseigné";
-  }
-
-  return String(value);
-}
-
-function buildAgentRecap(subIssue, result) {
-  const category = getCategory(state.category);
-
-  const lines = [
-    "Recap SAV",
-    `Categorie : ${category ? category.label : "-"}`,
-    `Sous-categorie : ${subIssue.label}`,
-    `Diagnostic automatique : ${result.title}`,
-    `Action suggeree : ${result.summary}`
-  ];
-
-  const importantFields = subIssue.fields.map((fieldKey) => {
-    const def = FIELD_DEFS[fieldKey];
-    const cleanLabel = (def?.label || fieldKey).replace("*", "");
-    const value = formatValueForRecap(fieldKey, state.values[fieldKey]);
-    return `- ${cleanLabel} : ${value}`;
+// ── Submit ────────────────────────────────────────────────────────────────────
+async function submitForm(node) {
+  (node.fields || []).forEach(key => {
+    const el  = document.getElementById("f-" + key);
+    const def = FIELD_DEFS[key];
+    if (!el || !def) return;
+    if (def.type === "file")          state.values[key] = el.files && el.files.length > 0;
+    else if (def.type === "checkbox") state.values[key] = el.checked;
+    else                              state.values[key] = el.value.trim();
   });
 
-  lines.push("", "Informations client :");
-  lines.push(...importantFields);
-
-  if (state.values.note) {
-    lines.push("", `Note client : ${state.values.note}`);
+  const err = validate(node);
+  if (err) {
+    const box = document.getElementById("errBox");
+    box.textContent = "⚠ " + err;
+    box.classList.remove("hidden");
+    return;
   }
 
-  const checks = [];
+  const sendBtn = document.getElementById("sendBtn");
+  sendBtn.textContent = "Envoi en cours…";
+  sendBtn.disabled    = true;
 
-  if (state.category === "annulation") {
-    checks.push("Verifier le statut de preparation / expedition avant action.");
-  }
-
-  if (state.category === "retour") {
-    checks.push("Verifier le dossier ReturnGO et l'etat du retour.");
-  }
-
-  if (state.category === "transit") {
-    checks.push("Verifier le tracking transporteur et l'historique du colis.");
-  }
-
-  if (state.category === "defectueux_reception") {
-    checks.push("Verifier les preuves jointes et la conformite du colis.");
-  }
-
-  if (state.category === "modification_commande") {
-    checks.push("Verifier si la commande est encore modifiable avant expedition.");
-  }
-
-  if (state.values.returnId) {
-    checks.push("Controle rapide du dossier ReturnGO a partir de l'ID fourni.");
-  }
-
-  if (state.values.photoUpload) {
-    checks.push("Une photo a ete annoncee par le client.");
-  }
-
-  if (state.values.proofUpload) {
-    checks.push("Une preuve / un justificatif a ete annonce par le client.");
-  }
-
-  if (checks.length) {
-    lines.push("", "Points de verification agent :");
-    checks.forEach((check) => lines.push(`- ${check}`));
-  }
-
-  return lines.join("\n");
-}
-
-async function resolveFlow() {
-  const subIssue = getSubIssue();
-  if (!subIssue) return;
-
-  refreshValuesFromDom(subIssue);
-
-  if (!validateFields(subIssue)) return;
-
-  state.result = subIssue.resolve(state.values);
-  state.result.agentRecap = buildAgentRecap(subIssue, state.result);
-
-  // ── Envoi vers Zendesk ──────────────────────────────────────────────────────
   try {
-    const category = getCategory(state.category);
+    const contextNote = Object.entries(state.values)
+      .filter(([k]) => k.endsWith("_context"))
+      .map(([, v]) => v).join("\n") || "";
 
-    const response = await fetch("/api/zendesk", {
+    const res  = await fetch("/api/zendesk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: state.values.email,
-        orderNumber: state.values.orderNumber,
-        tracking: state.values.tracking,
-        returnId: state.values.returnId,
-        note: state.values.note,
-        returnOpened: state.values.returnOpened,
-        category: category ? category.label : state.category,
-        subIssue: subIssue.label,
-        agentRecap: state.result.agentRecap
+        email:       state.values.email       || "",
+        orderNumber: state.values.orderNumber || "",
+        returnId:    state.values.returnId    || "",
+        note:        contextNote,
+        photoUpload: !!(state.values.photoUpload_opt || state.values.photoUpload_req),
+        category:    state.path[0]?.label     || "",
+        subIssue:    state.path[state.path.length - 1]?.label || "",
+        agentNote:   node.agentNote           || "",
+        path:        state.path.map(n => n.label).join(" › ")
       })
     });
 
-    const data = await response.json();
-
+    const data = await res.json();
     if (data.success) {
-      state.result.ticketId = data.ticketId;
-      console.log("Ticket Zendesk créé :", data.ticketId);
-    } else {
-      console.warn("Zendesk non disponible :", data.error);
-    }
-  } catch (err) {
-    console.warn("Impossible de contacter le serveur :", err.message);
-  }
-  // ───────────────────────────────────────────────────────────────────────────
+      state.ticketId = data.ticketId;
+      state.done     = true;
+      render();
+    } else throw new Error(data.error || "Erreur inconnue");
 
-  render();
+  } catch {
+    const box = document.getElementById("errBox");
+    box.innerHTML = "<strong>Erreur</strong> — Impossible d'envoyer. Réessayez ou contactez-nous directement.";
+    box.classList.remove("hidden");
+    sendBtn.textContent = "Envoyer ma demande";
+    sendBtn.disabled    = false;
+  }
 }
 
-function renderResult() {
+// ── Confirmation ──────────────────────────────────────────────────────────────
+function renderConfirm() {
   resultRoot.classList.remove("hidden");
   resultRoot.innerHTML = `
-    <div class="result ${state.result.tone}">
-      <h3>${state.result.title}</h3>
-      <p>${state.result.text}</p>
-      <div class="summary">${state.result.summary}</div>
+    <div class="result success" style="text-align:center;padding:32px">
+      <h3 style="font-size:28px;margin-bottom:12px">✅ Demande envoyée !</h3>
+      <p>Nous avons bien reçu votre message et vous répondrons dans les meilleurs délais.</p>
+      ${state.ticketId ? `<div class="summary">Référence : <strong>#${escapeHtml(String(state.ticketId))}</strong></div>` : ""}
     </div>
-
-    ${state.result.ticketId ? `
-    <div class="result success" style="margin-top:12px">
-      <p>✅ Ticket Zendesk créé avec succès — <strong>#${state.result.ticketId}</strong></p>
-    </div>` : ""}
-
-    <div class="agent-recap">
-      <div class="agent-recap-header">
-        <h4>Récapitulatif agent SAV</h4>
-        <button class="secondary-btn" id="copyRecapBtn" type="button">Copier le récap</button>
-      </div>
-      <p class="agent-recap-sub">Texte prêt à transmettre à un agent pour vérification manuelle.</p>
-      <textarea id="agentRecapText" class="agent-recap-text" readonly>${escapeHtml(state.result.agentRecap || "")}</textarea>
-    </div>
-
-    <div class="actions">
-      <button class="secondary-btn" id="restartBtn">Recommencer</button>
-      <button class="primary-btn" id="editBtn">Modifier ce chemin</button>
+    <div class="actions" style="margin-top:24px;justify-content:center">
+      <button class="secondary-btn" id="restartBtn">Nouvelle demande</button>
     </div>
   `;
-
-  document.getElementById("copyRecapBtn").addEventListener("click", async () => {
-    const recap = state.result.agentRecap || "";
-    try {
-      await navigator.clipboard.writeText(recap);
-      document.getElementById("copyRecapBtn").textContent = "Copié";
-      window.setTimeout(() => {
-        const button = document.getElementById("copyRecapBtn");
-        if (button) button.textContent = "Copier le récap";
-      }, 1200);
-    } catch (error) {
-      const textArea = document.getElementById("agentRecapText");
-      textArea.focus();
-      textArea.select();
-    }
-  });
-
-  document.getElementById("restartBtn").addEventListener("click", () => {
-    resetFlow(true);
-    render();
-  });
-
-  document.getElementById("editBtn").addEventListener("click", () => {
-    state.result = null;
-    state.step = 3;
+  resultRoot.querySelector("#restartBtn").addEventListener("click", () => {
+    state.path = []; state.values = {}; state.done = false; state.ticketId = null;
     render();
   });
 }
 
+// ─── INIT ─────────────────────────────────────────────────────────────────────
 render();
