@@ -98,8 +98,8 @@ module.exports = async function handler(req, res) {
     agentRecap
   } = req.body;
 
-  if (!email || (!orderNumber && !returnId)) {
-    return res.status(400).json({ error: "Email et numero de commande ou ID retour requis." });
+  if (!email || (!orderNumber && !returnId && !formValues?.message)) {
+    return res.status(400).json({ error: "Email et numero de commande, ID retour ou message requis." });
   }
 
   const zendeskEmail = getRequiredEnv("ZENDESK_EMAIL");
@@ -121,39 +121,20 @@ module.exports = async function handler(req, res) {
     `${zendeskEmail}/token:${zendeskToken}`
   ).toString("base64");
 
-  const referenceLabel = orderNumber ? `Commande ${orderNumber}` : `Retour ${returnId}`;
+  const referenceLabel = orderNumber
+    ? `Commande ${orderNumber}`
+    : returnId
+      ? `Retour ${returnId}`
+      : "Sans reference";
   const subject = `[SAV] ${category || "Demande"} - ${subIssue || ""} - ${referenceLabel}`;
   const resolvedClientNote =
     note ||
     formValues?.modifDetail ||
-    formValues?.annulRaison ||
-    formValues?.defect_context ||
-    formValues?.retour_suivi_context ||
-    formValues?.retour_remb_context ||
-    formValues?.retour_echange_context ||
-    formValues?.retour_bloque_context ||
-    formValues?.suivi_retard_context ||
-    formValues?.suivi_bloque_context ||
-    formValues?.suivi_perdu_context ||
-    formValues?.suivi_relais_context ||
-    formValues?.suivi_non_recu_context ||
+    formValues?.message ||
+    formValues?.messageOpt ||
     "";
 
-  const body = `
-${agentRecap || ""}
-
-------------------------------
-Details techniques du formulaire :
-- Email client       : ${email}
-- N commande         : ${orderNumber}
-- N suivi            : ${tracking || "Non renseigne"}
-- ID ReturnGO        : ${returnId || "Non renseigne"}
-- Retour deja ouvert : ${returnOpened ? "Oui" : "Non"}
-- Categorie ID       : ${categoryId || "Non renseigne"}
-- Sous-sujet ID      : ${subIssueId || "Non renseigne"}
-- Chemin             : ${path || "Non renseigne"}
-- Note client        : ${resolvedClientNote || "Aucune"}
-  `.trim();
+  const body = resolvedClientNote || "Aucune note client.";
 
   const context = {
     email,
