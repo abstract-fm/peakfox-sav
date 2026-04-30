@@ -11,24 +11,14 @@ const ART = {
 const FIELD_DEFS = {
   email:                  { type: "email",    label: "Adresse e-mail*",                          placeholder: "vous@email.com",                                                              required: true  },
   orderNumber:            { type: "text",     label: "Numéro de commande*",                      placeholder: "#12345",                                                                      required: true  },
-  orderDate:              { type: "text",     label: "Date de la commande",                      placeholder: "jj/mm/aaaa",                                                                  required: false },
-  returnId:               { type: "text",     label: "Numéro / ID du retour*",                   placeholder: "RTG-12345",                                                                   required: true  },
-  modifDetail:            { type: "textarea", label: "Détail de la modification*",               placeholder: "Décrivez ce que vous souhaitez modifier…",                                    required: true  },
-  annulRaison:            { type: "textarea", label: "Raison de la demande d'annulation*",       placeholder: "Pourquoi souhaitez-vous annuler ? Depuis combien de temps ?",                 required: true,
-                            hint: "Soyez précis — cela nous permet de traiter votre demande plus rapidement." },
-  suivi_retard_context:   { type: "textarea", label: "Contexte du retard*",                      placeholder: "Depuis combien de temps ? Dernier statut affiché ? Date d'expédition ?",     required: true  },
-  suivi_bloque_context:   { type: "textarea", label: "Informations sur le blocage*",             placeholder: "Numéro de suivi, date d'expédition, transporteur, dernier statut…",          required: true  },
-  suivi_perdu_context:    { type: "textarea", label: "Informations sur la perte*",               placeholder: "Numéro de suivi, date d'expédition, depuis combien de temps sans MAJ…",     required: true  },
-  suivi_relais_context:   { type: "textarea", label: "Description du problème*",                 placeholder: "Nom et adresse du point relais, nature du problème…",                        required: true  },
-  checkVoisins:           { type: "checkbox", label: "J'ai vérifié auprès de mes voisins / concierge si le colis n'a pas été livré chez eux", required: true },
-  suivi_non_recu_context: { type: "textarea", label: "Décrivez la situation*",                   placeholder: "Depuis quand indique-t-il livré ? Avis de passage ? Contact transporteur ?", required: true  },
-  retour_suivi_context:   { type: "textarea", label: "Contexte de votre demande",                placeholder: "Décrivez votre situation…",                                                   required: false },
-  retour_remb_context:    { type: "textarea", label: "Contexte de votre demande",                placeholder: "Date du retour, montant attendu…",                                            required: false },
-  retour_echange_context: { type: "textarea", label: "Contexte de votre demande",                placeholder: "Décrivez le problème avec votre échange…",                                    required: false },
-  retour_bloque_context:  { type: "textarea", label: "Décrivez le problème rencontré*",          placeholder: "Que se passe-t-il ? Message d'erreur ?",                                      required: true  },
-  defect_context:         { type: "textarea", label: "Description du défaut*",                   placeholder: "Décrivez précisément le défaut, depuis quand il est apparu…",                 required: true  },
+  orderNumberOpt:         { type: "text",     label: "Numéro de commande",                       placeholder: "#12345",                                                                      required: false },
+  trackingNumber:         { type: "text",     label: "Numéro de suivi",                          placeholder: "Numéro de suivi si vous l'avez",                                              required: false },
+  returnId:               { type: "text",     label: "ID ReturnGo*",                             placeholder: "RTG-12345",                                                                   required: true  },
+  message:                { type: "textarea", label: "Message*",                                 placeholder: "Décrivez votre demande.",                                                     required: true  },
+  messageOpt:             { type: "textarea", label: "Message",                                  placeholder: "Ajoutez des précisions si besoin.",                                           required: false },
+  modifDetail:            { type: "textarea", label: "Message*",                                 placeholder: "Décrivez ce que vous souhaitez modifier.",                                    required: true  },
   photoUpload_opt:        { type: "file",     label: "Joindre une pièce jointe (optionnel)",     required: false },
-  photoUpload_req:        { type: "file",     label: "Joindre une pièce jointe obligatoire (photo ou capture d'écran)*", required: true }
+  photoUpload_req:        { type: "file",     label: "Joindre une photo obligatoire*",           required: true }
 };
 
 // ─── FLOW ─────────────────────────────────────────────────────────────────────
@@ -36,163 +26,182 @@ const FLOW = {
   rootQuestion: "Pourquoi nous contactez-vous ?",
   categories: [
     {
-      id: "annulation", label: "Annulation de commande",
-      question: "Depuis combien de temps avez-vous passé votre commande ?",
+      id: "annulation", label: "Annuler ma commande",
+      question: "Avez-vous reçu un suivi ?",
       children: [
         {
-          id: "annul_moins_24h", label: "Moins de 24h",
-          outcome: "selfservice",
-          selfservice: {
-            title: "Annulation sous 24h",
-            body: "Bonne nouvelle — votre commande est peut-être encore annulable ! Consultez notre article dédié pour suivre la procédure en autonomie.",
-            ctaLabel: "Annuler ma commande →", ctaHref: ART.annulation
-          }
+          id: "annul_suivi_non", label: "Non",
+          outcome: "ticket",
+          topText: "Votre annulation semble possible. Nous allons vérifier et traiter la demande.",
+          fields: ["email", "orderNumber"],
+          agentNote: "Annulation possible : vérifier que la commande n'a pas encore de suivi."
         },
         {
-          id: "annul_plus_24h", label: "Plus de 24h",
+          id: "annul_suivi_oui", label: "Oui",
+          outcome: "selfservice",
+          selfservice: { title: "Retour / remboursement", body: "Votre commande a déjà un suivi. L'annulation n'est plus le bon parcours : utilisez le retour ou le remboursement.", ctaLabel: "Accéder au portail retour", ctaHref: ART.retour }
+        },
+        {
+          id: "annul_suivi_inconnu", label: "Je ne sais pas",
           outcome: "ticket",
-          topText: "⚠️ Cette demande est hors procédure standard. Nous allons vérifier le statut de votre commande. Si elle est déjà expédiée, l'annulation ne sera pas possible.",
-          fields: ["email", "orderNumber", "annulRaison"],
-          agentNote: "Vérifier Shopify/Shippingbo si commande expédiée."
+          topText: "Nous allons vérifier le statut de votre commande.",
+          fields: ["email", "orderNumber"],
+          agentNote: "Vérification SAV : contrôler le statut d'expédition avant annulation."
         }
       ]
     },
     {
-      id: "modification", label: "Modification de commande",
-      outcome: "ticket",
-      topText: "Décrivez précisément ce que vous souhaitez modifier (adresse, article, taille, couleur…).",
-      fields: ["email", "orderNumber", "modifDetail"],
-      agentNote: "Vérifier Shopify/Shippingbo. NON expédiée→modifier. OUI→orienter vers retour."
+      id: "modification", label: "Modifier ma commande",
+      question: "Avez-vous reçu un suivi ?",
+      children: [
+        {
+          id: "modif_suivi_non", label: "Non",
+          question: "Que souhaitez-vous modifier ?",
+          children: [
+            { id: "modif_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "modifDetail"], agentNote: "Modification adresse avant suivi." },
+            { id: "modif_produit", label: "Produit", outcome: "ticket", fields: ["email", "orderNumber", "modifDetail"], agentNote: "Modification produit avant suivi." },
+            { id: "modif_information", label: "Information", outcome: "ticket", fields: ["email", "orderNumber", "modifDetail"], agentNote: "Modification information avant suivi." }
+          ]
+        },
+        {
+          id: "modif_suivi_oui", label: "Oui",
+          outcome: "selfservice",
+          selfservice: { title: "Retour / remboursement", body: "Votre commande a déjà un suivi. La modification n'est plus le bon parcours : utilisez le retour ou le remboursement.", ctaLabel: "Accéder au portail retour", ctaHref: ART.retour }
+        },
+        {
+          id: "modif_suivi_inconnu", label: "Je ne sais pas",
+          outcome: "ticket",
+          fields: ["email", "orderNumber", "message"],
+          agentNote: "Vérifier le statut de suivi avant modification."
+        }
+      ]
     },
     {
-      id: "suivi", label: "Problème avec le suivi",
+      id: "suivi", label: "Problème de livraison / suivi",
       question: "Quel est votre problème ?",
       children: [
         {
-          id: "suivi_pas_suivi", label: "Retard expédition — pas encore de suivi",
+          id: "suivi_pas_suivi", label: "Je n'ai pas encore de suivi",
           outcome: "ticket",
-          fields: ["email", "orderNumber", "orderDate"],
+          fields: ["email", "orderNumber"],
           agentNote: "Vérifier statut Shippingbo."
         },
         {
-          id: "suivi_retard", label: "Retard du transporteur",
+          id: "suivi_retard", label: "Mon colis est en retard",
           outcome: "ticket",
-          topText: "💬 Depuis combien de temps attendez-vous ? Quel est le dernier statut affiché ?",
-          fields: ["email", "orderNumber", "suivi_retard_context", "photoUpload_opt"],
-          agentNote: "Vérifier tracking. Ouvrir enquête si retard >5j."
+          fields: ["email", "orderNumber", "trackingNumber", "messageOpt"],
+          agentNote: "Vérifier tracking et délai transporteur."
         },
         {
-          id: "suivi_bloque", label: "Commande bloquée chez le transporteur",
+          id: "suivi_bloque", label: "Mon colis est bloqué",
           outcome: "ticket",
-          topText: "📋 Un colis bloqué ne doit pas avoir eu de mise à jour depuis au moins 3 jours.",
-          fields: ["email", "orderNumber", "suivi_bloque_context", "photoUpload_opt"],
+          fields: ["email", "orderNumber", "trackingNumber", "messageOpt"],
           agentNote: "Contacter transporteur pour déblocage."
         },
         {
-          id: "suivi_perdu", label: "Commande perdue par le transporteur",
+          id: "suivi_perdu", label: "Mon colis semble perdu",
           outcome: "ticket",
-          topText: "📋 Un colis est considéré perdu après au moins 5 jours sans mise à jour de suivi.",
-          fields: ["email", "orderNumber", "suivi_perdu_context", "photoUpload_opt"],
+          fields: ["email", "orderNumber", "trackingNumber", "messageOpt"],
           agentNote: "Ouvrir enquête transporteur."
         },
         {
-          id: "suivi_relais", label: "Problème avec un point relais",
+          id: "suivi_relais", label: "Problème point relais",
           outcome: "ticket",
-          topText: "📋 Indiquez le nom et l'adresse du point relais ainsi que la nature du problème.",
-          fields: ["email", "orderNumber", "suivi_relais_context", "photoUpload_opt"],
+          fields: ["email", "orderNumber", "trackingNumber", "message"],
           extraLink: { label: "Je n'ai pas reçu mon code Mondial Relay — que faire ?", href: ART.pointRelais },
           agentNote: "Vérifier suivi au point relais."
         },
         {
-          id: "suivi_livre_non_recu", label: "Marqué livré mais non reçu",
+          id: "suivi_livre_non_recu", label: "Livré mais non reçu",
           outcome: "ticket",
-          topText: "📋 Avant de soumettre, merci de vérifier auprès de vos voisins / concierge.",
-          fields: ["checkVoisins", "email", "orderNumber", "suivi_non_recu_context", "photoUpload_req"],
+          fields: ["email", "orderNumber", "trackingNumber", "message"],
           agentNote: "Vérifier preuve de livraison transporteur."
         }
       ]
     },
     {
-      id: "reception", label: "J'ai reçu ma commande mais j'ai un problème",
-      topBanner: "⚠️ Passé 7 jours après la réception, il n'est plus possible de traiter ces demandes.",
-      question: "Quel est le problème à la réception ?",
+      id: "retour", label: "Retour / remboursement",
+      question: "Délai depuis réception ≤ 14 jours ?",
       children: [
         {
-          id: "recep_endommage", label: "Produit endommagé",
-          outcome: "selfservice",
-          selfservice: { title: "Produit endommagé", body: "Consultez notre article pour la procédure de retour / échange pour produit non conforme.", ctaLabel: "Voir l'article →", ctaHref: ART.nonConforme }
+          id: "retour_delai_non", label: "Non",
+          outcome: "ticket",
+          fields: ["email", "message"],
+          agentNote: "Hors délai 14 jours : traitement manuel SAV."
         },
         {
-          id: "recep_manquant", label: "Produit(s) manquant(s)",
-          outcome: "selfservice",
-          selfservice: { title: "Produit manquant", body: "Un article manquait dans votre colis ? Consultez notre article pour la procédure.", ctaLabel: "Voir l'article →", ctaHref: ART.nonConforme }
-        },
-        {
-          id: "recep_mauvais", label: "Mauvais produit reçu",
-          outcome: "selfservice",
-          selfservice: { title: "Mauvais produit reçu", body: "Vous avez reçu un article qui n'est pas le vôtre ? Consultez notre article pour la procédure d'échange.", ctaLabel: "Voir l'article →", ctaHref: ART.nonConforme }
-        }
-      ]
-    },
-    {
-      id: "retour", label: "Retour",
-      question: "Avez-vous déjà initié un retour pour cette commande ?",
-      children: [
-        {
-          id: "retour_oui", label: "Oui, j'ai déjà un retour en cours",
-          question: "Quel est votre problème avec ce retour ?",
+          id: "retour_delai_oui", label: "Oui",
+          question: "Que souhaitez-vous faire ?",
           children: [
             {
-              id: "retour_suivi", label: "Je veux suivre mon retour",
+              id: "retour_non", label: "Faire un retour",
               outcome: "ticket",
-              fields: ["email", "returnId", "retour_suivi_context", "photoUpload_opt"],
+              fields: ["email", "orderNumber"],
+              agentNote: "Demande de création de retour."
+            },
+            {
+              id: "retour_suivi", label: "Suivre mon retour",
+              outcome: "ticket",
+              fields: ["email", "returnId"],
               agentNote: "Vérifier statut retour dans ReturnGO."
             },
             {
-              id: "retour_remb", label: "Problème de remboursement",
+              id: "retour_remb", label: "Problème avec mon remboursement",
               outcome: "ticket",
-              fields: ["email", "returnId", "retour_remb_context", "photoUpload_opt"],
+              fields: ["email", "returnId", "message"],
               agentNote: "Vérifier statut remboursement Shopify/ReturnGO."
             },
             {
               id: "retour_echange", label: "Problème avec mon échange",
               outcome: "ticket",
-              fields: ["email", "returnId", "retour_echange_context", "photoUpload_opt"],
+              fields: ["email", "orderNumber", "message"],
               agentNote: "Vérifier workflow échange ReturnGO."
+            },
+            {
+              id: "retour_bloque", label: "Le portail retour ne fonctionne pas",
+              outcome: "ticket",
+              fields: ["email", "orderNumber", "message"],
+              agentNote: "Vérifier éligibilité ReturnGO. Créer retour manuellement si besoin."
             }
           ]
-        },
-        {
-          id: "retour_non", label: "Non, je veux faire un retour",
-          outcome: "selfservice",
-          selfservice: { title: "Initiez votre retour en ligne", body: "La procédure est simple et rapide via notre portail dédié.", ctaLabel: "Accéder au portail retour →", ctaHref: ART.retour }
-        },
-        {
-          id: "retour_bloque", label: "J'ai essayé mais ça ne fonctionne pas",
-          outcome: "ticket",
-          topText: "Décrivez le problème rencontré. Une pièce jointe (capture d'écran) est requise.",
-          fields: ["email", "orderNumber", "retour_bloque_context", "photoUpload_req"],
-          agentNote: "Vérifier éligibilité ReturnGO. Créer retour manuellement si besoin."
         }
       ]
     },
     {
-      id: "defectueux", label: "Défectueux",
-      question: "Depuis combien de temps votre colis a-t-il été livré ?",
+      id: "reception", label: "Problème avec un produit reçu",
+      question: "Quel est le problème ?",
       children: [
         {
-          id: "defect_moins_10j", label: "Moins de 10 jours",
-          outcome: "selfservice",
-          selfservice: { title: "Produit défectueux — sous 10 jours", body: "Vous êtes dans le délai pour faire une demande via notre portail.", ctaLabel: "Produit défectueux — faire un retour →", ctaHref: ART.defectueux }
+          id: "recep_endommage", label: "Produit endommagé",
+          outcome: "ticket",
+          fields: ["email", "orderNumber", "photoUpload_req", "message"],
+          agentNote: "Produit endommagé : photo obligatoire."
         },
         {
-          id: "defect_plus_10j", label: "Plus de 10 jours",
+          id: "recep_manquant", label: "Produit manquant",
           outcome: "ticket",
-          topText: "⚠️ Votre demande est hors délai standard (10 jours). Elle sera étudiée au cas par cas.",
-          fields: ["email", "orderNumber", "defect_context", "photoUpload_req"],
-          agentNote: "Défectueux hors délai. Étudier au cas par cas."
+          fields: ["email", "orderNumber", "photoUpload_opt", "message"],
+          agentNote: "Produit manquant."
+        },
+        {
+          id: "recep_mauvais", label: "Mauvais produit reçu",
+          outcome: "ticket",
+          fields: ["email", "orderNumber", "photoUpload_req", "message"],
+          agentNote: "Mauvais produit reçu : photo obligatoire."
+        },
+        {
+          id: "defectueux", label: "Produit ne fonctionne pas / défectueux",
+          outcome: "ticket",
+          fields: ["email", "orderNumber", "photoUpload_opt", "message"],
+          agentNote: "Produit défectueux."
         }
       ]
+    },
+    {
+      id: "autre", label: "Autre demande",
+      outcome: "ticket",
+      fields: ["email", "orderNumberOpt", "message"],
+      agentNote: "Autre demande : orienter selon le contenu."
     }
   ]
 };
@@ -403,7 +412,7 @@ async function submitForm(node) {
     const contextNote = Object.entries(state.values)
       .filter(([key, value]) => {
         if (!value || typeof value !== "string" || !value.trim()) return false;
-        return key.endsWith("_context") || key === "modifDetail" || key === "annulRaison" || key === "defect_context";
+        return key.endsWith("_context") || key.endsWith("Message") || key === "message" || key === "messageOpt" || key === "modifDetail";
       })
       .map(([, value]) => value)
       .join("\n") || "";
@@ -413,7 +422,8 @@ async function submitForm(node) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email:       state.values.email       || "",
-        orderNumber: state.values.orderNumber || "",
+        orderNumber: state.values.orderNumber || state.values.orderNumberOpt || "",
+        tracking:    state.values.trackingNumber || "",
         returnId:    state.values.returnId    || "",
         note:        contextNote,
         photoUpload: !!(state.values.photoUpload_opt || state.values.photoUpload_req),
