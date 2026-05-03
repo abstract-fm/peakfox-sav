@@ -17,16 +17,11 @@
       "id": 48861884014740,
       "source": "subIssueId",
       "values": {
-        "annul_plus_24h": "cancel_request",
-        "annul_oms_plus_24h": "cancel_request",
-        "annul_introuvable": "cancel_request",
+        "annulation": "cancel_request",
 
-        "modif_non_exp_adresse": "modify_address",
-        "modif_exp_adresse": "modify_address",
-        "modif_non_exp_produit": "modify_product",
-        "modif_non_exp_info": "modify_information",
-        "modif_exp_information": "modify_information",
-        "modif_introuvable": "modify_information",
+        "modif_adresse": "modify_address",
+        "modif_produit": "modify_product",
+        "modif_information": "modify_information",
 
         "suivi_pas_suivi": "no_tracking_received",
         "suivi_retard": "package_delayed",
