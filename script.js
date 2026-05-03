@@ -14,11 +14,15 @@ const FIELD_DEFS = {
   orderNumberOpt:         { type: "text",     label: "Numéro de commande",                       placeholder: "#12345",                                                                      required: false },
   trackingNumber:         { type: "text",     label: "Numéro de suivi",                          placeholder: "Numéro de suivi si vous l'avez",                                              required: false },
   returnId:               { type: "text",     label: "ID ReturnGo*",                             placeholder: "RTG-12345",                                                                   required: true  },
+  returnIdOpt:            { type: "text",     label: "ID ReturnGo",                              placeholder: "RTG-12345 si vous l'avez",                                                    required: false },
   message:                { type: "textarea", label: "Message*",                                 placeholder: "Décrivez votre demande.",                                                     required: true  },
   messageOpt:             { type: "textarea", label: "Message",                                  placeholder: "Ajoutez des précisions si besoin.",                                           required: false },
   modifDetail:            { type: "textarea", label: "Message*",                                 placeholder: "Décrivez ce que vous souhaitez modifier.",                                    required: true  },
+  newAddress:             { type: "textarea", label: "Nouvelle adresse*",                        placeholder: "Nom, adresse, complément, code postal, ville, pays, téléphone.",               required: true  },
+  neighborCheck:          { type: "checkbox", label: "J'ai vérifié chez mes voisins*",           required: true  },
   photoUpload_opt:        { type: "file",     label: "Joindre une pièce jointe (optionnel)",     required: false },
-  photoUpload_req:        { type: "file",     label: "Joindre une photo obligatoire*",           required: true }
+  photoUpload_req:        { type: "file",     label: "Joindre une photo obligatoire*",           required: true  },
+  attestationUpload_req:  { type: "file",     label: "Joindre l'attestation sur l'honneur signée*", required: true }
 };
 
 // ─── FLOW ─────────────────────────────────────────────────────────────────────
@@ -27,52 +31,85 @@ const FLOW = {
   categories: [
     {
       id: "annulation", label: "Annuler ma commande",
-      question: "Avez-vous reçu un suivi ?",
+      question: "Vérification commande (Shippingbo)",
+      topBanner: "Renseignez votre e-mail et votre numéro de commande après le choix du statut Shippingbo.",
       children: [
         {
-          id: "annul_suivi_non", label: "Non",
-          outcome: "ticket",
-          topText: "Votre annulation semble possible. Nous allons vérifier et traiter la demande.",
-          fields: ["email", "orderNumber"],
-          agentNote: "Annulation possible : vérifier que la commande n'a pas encore de suivi."
-        },
-        {
-          id: "annul_suivi_oui", label: "Oui",
+          id: "annul_moins_24h", label: "Commande < 24h",
           outcome: "selfservice",
-          selfservice: { title: "Retour / remboursement", body: "Votre commande a déjà un suivi. L'annulation n'est plus le bon parcours : utilisez le retour ou le remboursement.", ctaLabel: "Accéder au portail retour", ctaHref: ART.retour }
+          orderStatusOms: "under_24h",
+          fields: ["email", "orderNumber"],
+          selfservice: { title: "Annulation en self-service", body: "Votre commande est éligible au portail ReturnGo. Aucun ticket SAV n'est créé.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
         },
         {
-          id: "annul_suivi_inconnu", label: "Je ne sais pas",
+          id: "annul_plus_24h", label: "Commande > 24h",
           outcome: "ticket",
-          topText: "Nous allons vérifier le statut de votre commande.",
+          orderStatusOms: "over_24h",
           fields: ["email", "orderNumber"],
-          agentNote: "Vérification SAV : contrôler le statut d'expédition avant annulation."
+          agentNote: "Annulation > 24h : créer ticket et bloquer la commande dans Shippingbo."
+        },
+        {
+          id: "annul_expediee", label: "Commande déjà expédiée",
+          outcome: "selfservice",
+          orderStatusOms: "shipped",
+          fields: ["email", "orderNumber"],
+          selfservice: { title: "Annulation impossible", body: "La commande est déjà expédiée. L'annulation n'est plus possible et aucun ticket n'est créé.", ctaLabel: "Voir les retours / échanges", ctaHref: ART.retour }
+        },
+        {
+          id: "annul_oms_moins_24h", label: "Commande bloquée OMS (< 24h)",
+          outcome: "selfservice",
+          orderStatusOms: "blocked_under_24h",
+          fields: ["email", "orderNumber"],
+          selfservice: { title: "Annulation en self-service", body: "Votre commande est bloquée OMS et éligible au portail ReturnGo. Aucun ticket SAV n'est créé.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
+        },
+        {
+          id: "annul_oms_plus_24h", label: "Commande bloquée OMS (> 24h)",
+          outcome: "ticket",
+          orderStatusOms: "blocked_over_24h",
+          fields: ["email", "orderNumber"],
+          agentNote: "Commande bloquée OMS > 24h : créer ticket."
+        },
+        {
+          id: "annul_introuvable", label: "Commande introuvable",
+          outcome: "ticket",
+          orderStatusOms: "not_found",
+          topText: "Nous n'avons pas trouvé votre commande automatiquement. Vérifiez votre numéro avant d'envoyer la demande.",
+          fields: ["email", "orderNumber"],
+          agentNote: "Commande introuvable : créer ticket et avertir le client."
         }
       ]
     },
     {
       id: "modification", label: "Modifier ma commande",
-      question: "Avez-vous reçu un suivi ?",
+      question: "Vérification commande (Shippingbo)",
+      topBanner: "Renseignez votre e-mail et votre numéro de commande dans l'étape finale.",
       children: [
         {
-          id: "modif_suivi_non", label: "Non",
+          id: "modif_non_expediee", label: "Commande non expédiée",
+          orderStatusOms: "not_shipped",
           question: "Que souhaitez-vous modifier ?",
           children: [
-            { id: "modif_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "modifDetail"], agentNote: "Modification adresse avant suivi." },
-            { id: "modif_produit", label: "Produit", outcome: "ticket", fields: ["email", "orderNumber", "modifDetail"], agentNote: "Modification produit avant suivi." },
-            { id: "modif_information", label: "Information", outcome: "ticket", fields: ["email", "orderNumber", "modifDetail"], agentNote: "Modification information avant suivi." }
+            { id: "modif_non_exp_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "newAddress"], agentNote: "Commande non expédiée : mettre à jour l'adresse et créer un ticket informatif." },
+            { id: "modif_non_exp_produit", label: "Produit", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande non expédiée : bloquer la commande et créer un ticket." },
+            { id: "modif_non_exp_info", label: "Information de commande", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande non expédiée : créer ticket pour information de commande." }
           ]
         },
         {
-          id: "modif_suivi_oui", label: "Oui",
-          outcome: "selfservice",
-          selfservice: { title: "Retour / remboursement", body: "Votre commande a déjà un suivi. La modification n'est plus le bon parcours : utilisez le retour ou le remboursement.", ctaLabel: "Accéder au portail retour", ctaHref: ART.retour }
+          id: "modif_expediee", label: "Commande expédiée",
+          orderStatusOms: "shipped",
+          question: "Que souhaitez-vous modifier ?",
+          children: [
+            { id: "modif_exp_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande expédiée : créer ticket SAV / transporteur pour adresse." },
+            { id: "modif_exp_produit", label: "Produit", outcome: "selfservice", selfservice: { title: "Retour / échange", body: "La commande est expédiée. Pour modifier un produit, utilisez le parcours Retour / échange.", ctaLabel: "Accéder au parcours Retour / échange", ctaHref: ART.retour } },
+            { id: "modif_exp_information", label: "Information", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande expédiée : créer ticket pour information." }
+          ]
         },
         {
-          id: "modif_suivi_inconnu", label: "Je ne sais pas",
+          id: "modif_introuvable", label: "Commande introuvable",
           outcome: "ticket",
+          orderStatusOms: "not_found",
           fields: ["email", "orderNumber", "message"],
-          agentNote: "Vérifier le statut de suivi avant modification."
+          agentNote: "Commande introuvable : créer ticket."
         }
       ]
     },
@@ -81,10 +118,10 @@ const FLOW = {
       question: "Quel est votre problème ?",
       children: [
         {
-          id: "suivi_pas_suivi", label: "Je n'ai pas encore de suivi",
+          id: "suivi_pas_suivi", label: "Je n'ai pas encore reçu de lien de suivi",
           outcome: "ticket",
           fields: ["email", "orderNumber"],
-          agentNote: "Vérifier statut Shippingbo."
+          agentNote: "Créer ticket : client sans lien de suivi."
         },
         {
           id: "suivi_retard", label: "Mon colis est en retard",
@@ -93,34 +130,29 @@ const FLOW = {
           agentNote: "Vérifier tracking et délai transporteur."
         },
         {
-          id: "suivi_bloque", label: "Mon colis est bloqué",
+          id: "suivi_bloque", label: "Mon suivi n'avance plus / colis bloqué",
           outcome: "ticket",
           fields: ["email", "orderNumber", "trackingNumber", "messageOpt"],
           agentNote: "Contacter transporteur pour déblocage."
         },
         {
-          id: "suivi_perdu", label: "Mon colis semble perdu",
-          outcome: "ticket",
-          fields: ["email", "orderNumber", "trackingNumber", "messageOpt"],
-          agentNote: "Ouvrir enquête transporteur."
-        },
-        {
-          id: "suivi_relais", label: "Problème point relais",
+          id: "suivi_relais", label: "Problème avec le point relais",
           outcome: "ticket",
           fields: ["email", "orderNumber", "trackingNumber", "message"],
           extraLink: { label: "Je n'ai pas reçu mon code Mondial Relay — que faire ?", href: ART.pointRelais },
           agentNote: "Vérifier suivi au point relais."
         },
         {
-          id: "suivi_livre_non_recu", label: "Livré mais non reçu",
+          id: "suivi_livre_non_recu", label: "Mon colis est indiqué livré mais je ne l'ai pas reçu",
           outcome: "ticket",
-          fields: ["email", "orderNumber", "trackingNumber", "message"],
-          agentNote: "Vérifier preuve de livraison transporteur."
+          topText: "Téléchargez l'attestation sur l'honneur générée, signez-la, puis joignez le document à votre demande.",
+          fields: ["email", "orderNumber", "trackingNumber", "message", "neighborCheck", "attestationUpload_req"],
+          agentNote: "Livré non reçu : checkbox voisins obligatoire et attestation sur l'honneur signée à joindre."
         }
       ]
     },
     {
-      id: "retour", label: "Retour / remboursement",
+      id: "retour", label: "Retour / échange",
       question: "Délai depuis réception ≤ 14 jours ?",
       children: [
         {
@@ -134,28 +166,22 @@ const FLOW = {
           question: "Que souhaitez-vous faire ?",
           children: [
             {
-              id: "retour_non", label: "Faire un retour",
-              outcome: "ticket",
+              id: "retour_faire", label: "Faire un retour",
+              outcome: "selfservice",
               fields: ["email", "orderNumber"],
-              agentNote: "Demande de création de retour."
+              selfservice: { title: "Retour en self-service", body: "Votre demande est éligible au portail ReturnGo. Aucun ticket SAV n'est créé.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
             },
             {
-              id: "retour_suivi", label: "Suivre mon retour",
-              outcome: "ticket",
+              id: "retour_echange", label: "Faire un échange",
+              outcome: "selfservice",
+              fields: ["email", "orderNumber"],
+              selfservice: { title: "Échange en self-service", body: "Votre demande est éligible au portail ReturnGo. Aucun ticket SAV n'est créé.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
+            },
+            {
+              id: "retour_suivi", label: "Suivre mon retour / échange",
+              outcome: "selfservice",
               fields: ["email", "returnId"],
-              agentNote: "Vérifier statut retour dans ReturnGO."
-            },
-            {
-              id: "retour_remb", label: "Problème avec mon remboursement",
-              outcome: "ticket",
-              fields: ["email", "returnId", "message"],
-              agentNote: "Vérifier statut remboursement Shopify/ReturnGO."
-            },
-            {
-              id: "retour_echange", label: "Problème avec mon échange",
-              outcome: "ticket",
-              fields: ["email", "orderNumber", "message"],
-              agentNote: "Vérifier workflow échange ReturnGO."
+              selfservice: { title: "Suivi ReturnGo", body: "Le suivi de votre retour ou échange se fait directement depuis le portail ReturnGo.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
             },
             {
               id: "retour_bloque", label: "Le portail retour ne fonctionne pas",
@@ -164,6 +190,24 @@ const FLOW = {
               agentNote: "Vérifier éligibilité ReturnGO. Créer retour manuellement si besoin."
             }
           ]
+        }
+      ]
+    },
+    {
+      id: "remboursement", label: "Remboursement",
+      question: "Quel est votre problème ?",
+      children: [
+        {
+          id: "remb_non_recu", label: "Je n'ai pas reçu mon remboursement",
+          outcome: "ticket",
+          fields: ["email", "returnIdOpt", "message"],
+          agentNote: "Remboursement non reçu : vérifier statut ReturnGo / paiement."
+        },
+        {
+          id: "remb_montant_incorrect", label: "Le montant remboursé est incorrect",
+          outcome: "ticket",
+          fields: ["email", "returnIdOpt", "message"],
+          agentNote: "Montant remboursé incorrect : vérifier lignes de retour et paiement."
         }
       ]
     },
@@ -190,7 +234,13 @@ const FLOW = {
           agentNote: "Mauvais produit reçu : photo obligatoire."
         },
         {
-          id: "defectueux", label: "Produit ne fonctionne pas / défectueux",
+          id: "recep_incompatible", label: "Produit incompatible / mauvaise taille",
+          outcome: "ticket",
+          fields: ["email", "orderNumber", "message"],
+          agentNote: "Produit incompatible / mauvaise taille."
+        },
+        {
+          id: "defectueux", label: "Produit défectueux",
           outcome: "ticket",
           fields: ["email", "orderNumber", "photoUpload_opt", "message"],
           agentNote: "Produit défectueux."
@@ -235,9 +285,9 @@ function currentNode() {
 
 function updateMeta() {
   const depth = state.path.length;
-  const pct   = Math.min(Math.round((depth / 3) * 88) + 6, 92);
+  const pct   = Math.min(Math.round((depth / 4) * 88) + 6, 92);
   progressBar.style.width = `${pct}%`;
-  stepLabel.textContent   = `Étape ${Math.min(depth + 1, 3)} / 3`;
+  stepLabel.textContent   = `Étape ${Math.min(depth + 1, 4)} / 4`;
   pathLabel.textContent   = state.path.length
     ? state.path.map(n => n.label).join(" → ")
     : "Aucun chemin sélectionné";
@@ -286,21 +336,47 @@ function renderOptions(node) {
 // ── Self-service ──────────────────────────────────────────────────────────────
 function renderSelfService(node) {
   const ss = node.selfservice;
+  const fields = node.fields || [];
   const isHashLink = typeof ss.ctaHref === "string" && ss.ctaHref.startsWith("#");
   stepRoot.innerHTML = `
     <div class="result success">
       <h3>${escapeHtml(ss.title)}</h3>
       <p>${escapeHtml(ss.body)}</p>
     </div>
+    ${fields.length ? `
+      <div class="stack" style="margin-top:18px">
+        ${fields.map(renderField).join("")}
+      </div>
+      <div id="errBox" class="result danger hidden" style="margin-top:16px"></div>
+    ` : ""}
     <div class="actions" style="margin-top:24px">
       <button class="secondary-btn" id="backBtn">Retour</button>
-      <a class="primary-btn" href="${escapeHtml(ss.ctaHref)}" ${isHashLink ? "" : 'target="_blank" rel="noopener"'}
+      <a class="primary-btn" id="selfServiceCta" href="${escapeHtml(ss.ctaHref)}" ${isHashLink ? "" : 'target="_blank" rel="noopener"'}
          style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">
         ${escapeHtml(ss.ctaLabel)}
       </a>
     </div>
   `;
+  bindFieldEvents(fields);
   stepRoot.querySelector("#backBtn").addEventListener("click", () => { state.path.pop(); render(); });
+  stepRoot.querySelector("#selfServiceCta").addEventListener("click", (event) => {
+    fields.forEach(key => {
+      const el = document.getElementById("f-" + key);
+      const def = FIELD_DEFS[key];
+      if (!el || !def) return;
+      if (def.type === "file") state.values[key] = el.files && el.files.length > 0;
+      else if (def.type === "checkbox") state.values[key] = el.checked;
+      else state.values[key] = el.value.trim();
+    });
+
+    const err = validate(node);
+    if (!err) return;
+
+    event.preventDefault();
+    const box = document.getElementById("errBox");
+    box.textContent = "⚠ " + err;
+    box.classList.remove("hidden");
+  });
 }
 
 // ── Form ──────────────────────────────────────────────────────────────────────
@@ -309,6 +385,7 @@ function renderForm(node) {
   stepRoot.innerHTML = `
     ${node.topText ? `<div class="hint" style="margin-bottom:18px">${escapeHtml(node.topText)}</div>` : ""}
     <div class="stack">
+      ${fields.includes("attestationUpload_req") ? renderAttestationDownload() : ""}
       ${fields.map(renderField).join("")}
       ${node.extraLink ? `
         <div class="link-box">
@@ -327,6 +404,27 @@ function renderForm(node) {
   bindFieldEvents(fields);
   stepRoot.querySelector("#backBtn").addEventListener("click", () => { state.path.pop(); render(); });
   stepRoot.querySelector("#sendBtn").addEventListener("click", () => submitForm(node));
+}
+
+function renderAttestationDownload() {
+  const doc = `
+    <html><body>
+      <h1>Attestation sur l'honneur</h1>
+      <p>Je soussigne(e) ______________________________ atteste sur l'honneur ne pas avoir recu le colis indique livre.</p>
+      <p>Numero de commande : ______________________________</p>
+      <p>Numero de suivi : ______________________________</p>
+      <p>Fait a ______________________, le ____ / ____ / ______</p>
+      <p>Signature :</p>
+    </body></html>
+  `.trim();
+  const href = `data:application/msword;charset=utf-8,${encodeURIComponent(doc)}`;
+
+  return `
+    <div class="link-box">
+      <a href="${href}" download="attestation-sur-l-honneur.doc">
+        Télécharger l'attestation sur l'honneur (.doc)
+      </a>
+    </div>`;
 }
 
 function renderField(key) {
@@ -409,10 +507,11 @@ async function submitForm(node) {
   sendBtn.disabled    = true;
 
   try {
+    const orderStatusNode = [...state.path].reverse().find(item => item.orderStatusOms);
     const contextNote = Object.entries(state.values)
       .filter(([key, value]) => {
         if (!value || typeof value !== "string" || !value.trim()) return false;
-        return key.endsWith("_context") || key.endsWith("Message") || key === "message" || key === "messageOpt" || key === "modifDetail";
+        return key.endsWith("_context") || key.endsWith("Message") || key === "message" || key === "messageOpt" || key === "modifDetail" || key === "newAddress";
       })
       .map(([, value]) => value)
       .join("\n") || "";
@@ -424,13 +523,14 @@ async function submitForm(node) {
         email:       state.values.email       || "",
         orderNumber: state.values.orderNumber || state.values.orderNumberOpt || "",
         tracking:    state.values.trackingNumber || "",
-        returnId:    state.values.returnId    || "",
+        returnId:    state.values.returnId    || state.values.returnIdOpt || "",
         note:        contextNote,
         photoUpload: !!(state.values.photoUpload_opt || state.values.photoUpload_req),
         category:    state.path[0]?.label     || "",
         categoryId:  state.path[0]?.id        || "",
         subIssue:    state.path[state.path.length - 1]?.label || "",
         subIssueId:  state.path[state.path.length - 1]?.id    || "",
+        orderStatusOms: orderStatusNode?.orderStatusOms || "",
         agentNote:   node.agentNote           || "",
         path:        state.path.map(n => n.label).join(" › "),
         pathIds:     state.path.map(n => n.id),

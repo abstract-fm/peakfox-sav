@@ -1,117 +1,69 @@
 {
   "customFields": {
-    "categoryPeakfox": {
-      "id": 47705864427540,
+    "issueCategory": {
+      "id": 48861773075348,
       "source": "categoryId",
       "values": {
-        "annulation": "annulation_/_modification_de_commande",
-        "modification": "annulation_/_modification_de_commande",
-        "suivi": "commande_expédiée",
-        "reception": "retourfox",
-        "retour": "retourfox",
-        "defectueux": "defecfox"
+        "annulation": "cancellation",
+        "modification": "order_modification",
+        "suivi": "delivery_issue",
+        "retour": "return_exchange",
+        "remboursement": "refund_issue",
+        "reception": "product_issue",
+        "autre": "other"
       }
     },
-    "numeroCommandeFox": {
-      "id": 47705882590356,
+    "subCategory": {
+      "id": 48861884014740,
+      "source": "subIssueId",
+      "values": {
+        "annul_plus_24h": "cancel_request",
+        "annul_oms_plus_24h": "cancel_request",
+        "annul_introuvable": "cancel_request",
+
+        "modif_non_exp_adresse": "modify_address",
+        "modif_exp_adresse": "modify_address",
+        "modif_non_exp_produit": "modify_product",
+        "modif_non_exp_info": "modify_information",
+        "modif_exp_information": "modify_information",
+        "modif_introuvable": "modify_information",
+
+        "suivi_pas_suivi": "no_tracking_received",
+        "suivi_retard": "package_delayed",
+        "suivi_bloque": "package_blocked",
+        "suivi_relais": "pickup_point_issue",
+        "suivi_livre_non_recu": "delivered_not_received",
+
+        "retour_delai_non": "return_out_of_window",
+        "retour_bloque": "return_portal_issue",
+
+        "remb_non_recu": "refund_not_received",
+        "remb_montant_incorrect": "refund_incorrect_amount",
+
+        "recep_endommage": "damaged_product",
+        "recep_manquant": "missing_product",
+        "recep_mauvais": "wrong_product",
+        "recep_incompatible": "incompatible_product",
+        "defectueux": "defective_product",
+
+        "autre": "other_request"
+      }
+    },
+    "orderStatusOms": {
+      "id": 48861913855636,
+      "source": "orderStatusOms"
+    },
+    "orderId": {
+      "id": 48861908767892,
       "source": "orderNumber"
     },
-    "annulationModificationPeakfox": {
-      "id": 47705892659476,
-      "source": "categoryId",
-      "values": {
-        "annulation": "annulation",
-        "modification": "modification"
-      }
+    "trackingNumber": {
+      "id": 48861894437780,
+      "source": "tracking"
     },
-    "annulationDelaiFox": {
-      "id": 47705910469524,
-      "source": "subIssueId",
-      "values": {
-        "annul_moins_24h": "moins_24h",
-        "annul_plus_24h": "plus_24h"
-      }
-    },
-    "lienAnnulationFox": {
-      "id": 47705966038548,
-      "source": "articleLinks.annulation"
-    },
-    "plus24hAnnulationFox": {
-      "id": 47705983625620,
-      "source": "subIssueId",
-      "values": {
-        "annul_plus_24h": "Oui",
-        "annul_moins_24h": "Non"
-      }
-    },
-    "modifFox": {
-      "id": 47706008418068,
-      "source": "formValues.modifDetail"
-    },
-    "transporteurFox": {
-      "id": 47706046139924,
-      "source": "subIssueId",
-      "values": {
-        "suivi_retard": "transporteur_retard",
-        "suivi_bloque": "transporteur_bloque",
-        "suivi_perdu": "transporteur_perdu",
-        "suivi_relais": "point_relais",
-        "suivi_livre_non_recu": "livre_non_recu"
-      }
-    },
-    "commandeExpedieeFox": {
-      "id": 47706065658260,
-      "source": "subIssueId",
-      "values": {
-        "annul_plus_24h": "a_verifier",
-        "annul_moins_24h": "non"
-      }
-    },
-    "receptionFox": {
-      "id": 47706089447316,
-      "source": "subIssueId",
-      "values": {
-        "recep_endommage": "produit_endommage",
-        "recep_manquant": "produit_manquant",
-        "recep_mauvais": "mauvais_produit"
-      }
-    },
-    "retourPbFox": {
-      "id": 47706125623572,
-      "source": "subIssueId",
-      "values": {
-        "retour_bloque": "retour_bloque",
-        "retour_suivi": "suivi_retour",
-        "retour_remb": "probleme_remboursement",
-        "retour_echange": "probleme_echange",
-        "retour_non": "nouveau_retour"
-      }
-    },
-    "idReturngoFox": {
-      "id": 47706172906900,
+    "returngoId": {
+      "id": 48861931074452,
       "source": "returnId"
-    },
-    "statutRetourFox": {
-      "id": 47706175112596,
-      "source": "subIssueId",
-      "values": {
-        "retour_suivi": "suivi",
-        "retour_remb": "remboursement",
-        "retour_echange": "echange",
-        "retour_bloque": "bloque"
-      }
-    },
-    "lienRetourFox": {
-      "id": 47706200108436,
-      "source": "articleLinks.retour"
-    },
-    "delaiDefectueuxFox": {
-      "id": 47706235805844,
-      "source": "subIssueId",
-      "values": {
-        "defect_moins_10j": "moins_10_jours",
-        "defect_plus_10j": "plus_10_jours"
-      }
     }
   }
 }
