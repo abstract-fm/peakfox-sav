@@ -31,17 +31,86 @@ const FLOW = {
   categories: [
     {
       id: "annulation", label: "Annuler ma commande",
-      outcome: "ticket",
-      fields: ["email", "orderNumber", "messageOpt"],
-      agentNote: "Demande d'annulation : vérifier automatiquement le statut de commande avant traitement."
+      question: "Vérification commande (Shippingbo)",
+      topBanner: "Renseignez votre e-mail et votre numéro de commande après le choix du statut Shippingbo.",
+      children: [
+        {
+          id: "annul_moins_24h", label: "Commande < 24h",
+          outcome: "selfservice",
+          orderStatusOms: "under_24h",
+          fields: ["email", "orderNumber"],
+          selfservice: { title: "Annulation en self-service", body: "Votre commande est éligible au portail ReturnGo. Aucun ticket SAV n'est créé.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
+        },
+        {
+          id: "annul_plus_24h", label: "Commande > 24h",
+          outcome: "ticket",
+          orderStatusOms: "over_24h",
+          fields: ["email", "orderNumber"],
+          agentNote: "Annulation > 24h : créer ticket et bloquer la commande dans Shippingbo."
+        },
+        {
+          id: "annul_expediee", label: "Commande déjà expédiée",
+          outcome: "selfservice",
+          orderStatusOms: "shipped",
+          fields: ["email", "orderNumber"],
+          selfservice: { title: "Annulation impossible", body: "La commande est déjà expédiée. L'annulation n'est plus possible et aucun ticket n'est créé.", ctaLabel: "Voir les retours / échanges", ctaHref: ART.retour }
+        },
+        {
+          id: "annul_oms_moins_24h", label: "Commande bloquée OMS (< 24h)",
+          outcome: "selfservice",
+          orderStatusOms: "blocked_under_24h",
+          fields: ["email", "orderNumber"],
+          selfservice: { title: "Annulation en self-service", body: "Votre commande est bloquée OMS et éligible au portail ReturnGo. Aucun ticket SAV n'est créé.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
+        },
+        {
+          id: "annul_oms_plus_24h", label: "Commande bloquée OMS (> 24h)",
+          outcome: "ticket",
+          orderStatusOms: "blocked_over_24h",
+          fields: ["email", "orderNumber"],
+          agentNote: "Commande bloquée OMS > 24h : créer ticket."
+        },
+        {
+          id: "annul_introuvable", label: "Commande introuvable",
+          outcome: "ticket",
+          orderStatusOms: "not_found",
+          topText: "Nous n'avons pas trouvé votre commande automatiquement. Vérifiez votre numéro avant d'envoyer la demande.",
+          fields: ["email", "orderNumber"],
+          agentNote: "Commande introuvable : créer ticket et avertir le client."
+        }
+      ]
     },
     {
       id: "modification", label: "Modifier ma commande",
-      question: "Que souhaitez-vous modifier ?",
+      question: "Vérification commande (Shippingbo)",
+      topBanner: "Renseignez votre e-mail et votre numéro de commande dans l'étape finale.",
       children: [
-        { id: "modif_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "newAddress"], agentNote: "Demande de modification d'adresse : vérifier automatiquement le statut de commande avant traitement." },
-        { id: "modif_produit", label: "Produit", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Demande de modification produit : vérifier automatiquement le statut de commande avant traitement." },
-        { id: "modif_information", label: "Information de commande", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Demande de modification d'information : vérifier automatiquement le statut de commande avant traitement." }
+        {
+          id: "modif_non_expediee", label: "Commande non expédiée",
+          orderStatusOms: "not_shipped",
+          question: "Que souhaitez-vous modifier ?",
+          children: [
+            { id: "modif_non_exp_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "newAddress"], agentNote: "Commande non expédiée : mettre à jour l'adresse et créer un ticket informatif." },
+            { id: "modif_non_exp_produit", label: "Produit", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande non expédiée : bloquer la commande et créer un ticket." },
+            { id: "modif_non_exp_info", label: "Information de commande", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande non expédiée : créer ticket pour information de commande." }
+          ]
+        },
+        {
+          id: "modif_expediee", label: "Commande expédiée",
+          orderStatusOms: "shipped",
+          question: "Que souhaitez-vous modifier ?",
+          children: [
+            { id: "modif_exp_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande expédiée : créer ticket SAV / transporteur pour adresse." },
+            { id: "modif_exp_produit", label: "Produit", outcome: "selfservice", selfservice: { title: "Retour / échange", body: "La commande est expédiée. Pour modifier un produit, utilisez le parcours Retour / échange.", ctaLabel: "Accéder au parcours Retour / échange", ctaHref: ART.retour } },
+            { id: "modif_exp_information", label: "Information", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande expédiée : créer ticket pour information." }
+          ]
+        },
+        {
+          id: "modif_introuvable", label: "Commande introuvable",
+          outcome: "ticket",
+          orderStatusOms: "not_found",
+          fields: ["email", "orderNumber", "message"],
+          agentNote: "Commande introuvable : créer ticket."
+        }
       ]
     },
     {

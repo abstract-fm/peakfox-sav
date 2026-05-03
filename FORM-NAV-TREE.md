@@ -2,23 +2,45 @@ Pourquoi nous contactez-vous ?
 ├── Annuler ma commande
 │   ├── email
 │   ├── order_id
-│   ├── message (optionnel)
-│   └── → ticket créé
+│   └── Vérification commande (Shippingbo)
+│       ├── Commande < 24h
+│       │   └── → self-service portail ReturnGo (pas de ticket)
+│       ├── Commande > 24h
+│       │   └── → ticket créé + blocage commande
+│       ├── Commande déjà expédiée
+│       │   └── → annulation impossible, pas de ticket
+│       ├── Commande bloquée OMS (< 24h)
+│       │   └── → self-service portail ReturnGo (pas de ticket)
+│       ├── Commande bloquée OMS (> 24h)
+│       │   └── → ticket créé
+│       └── Commande introuvable
+│           └── → ticket créé + avertissement client
 ├── Modifier ma commande
-│   └── Que souhaitez-vous modifier ?
-│       ├── Adresse
-│       │   ├── email
-│       │   ├── order_id
-│       │   ├── nouvelle adresse
-│       │   └── → ticket créé
-│       ├── Produit
-│       │   ├── email
-│       │   ├── order_id
-│       │   ├── message
-│       │   └── → ticket créé
-│       └── Information de commande
-│           ├── email
-│           ├── order_id
+│   ├── email
+│   ├── order_id
+│   └── Vérification commande (Shippingbo)
+│       ├── Commande non expédiée
+│       │   └── Que souhaitez-vous modifier ?
+│       │       ├── Adresse
+│       │       │   ├── nouvelle adresse
+│       │       │   └── → mise à jour adresse + ticket informatif
+│       │       ├── Produit
+│       │       │   ├── message
+│       │       │   └── → blocage commande + ticket créé
+│       │       └── Information de commande
+│       │           ├── message
+│       │           └── → ticket créé
+│       ├── Commande expédiée
+│       │   └── Que souhaitez-vous modifier ?
+│       │       ├── Adresse
+│       │       │   ├── message
+│       │       │   └── → ticket créé (SAV / transporteur)
+│       │       ├── Produit
+│       │       │   └── → redirection : Retour / échange
+│       │       └── Information
+│       │           ├── message
+│       │           └── → ticket créé
+│       └── Commande introuvable
 │           ├── message
 │           └── → ticket créé
 ├── Problème de livraison / suivi
