@@ -6,6 +6,11 @@ const ART = {
   defectueux:  "#defectueux",
   pointRelais: "#point-relais"
 };
+const ORDER_NUMBER_RE = /^\d+$/;
+const RETURNGO_ID_RE = /^(ARM|RMA)\d{8}$/i;
+function normalizeOrderNumber(value) {
+  return String(value || "").replace(/\D/g, "");
+}
 
 // ─── FIELD DEFINITIONS ────────────────────────────────────────────────────────
 const FIELD_DEFS = {
@@ -13,8 +18,8 @@ const FIELD_DEFS = {
   orderNumber:            { type: "text",     label: "Numéro de commande*",                      placeholder: "#12345",                                                                      required: true  },
   orderNumberOpt:         { type: "text",     label: "Numéro de commande",                       placeholder: "#12345",                                                                      required: false },
   trackingNumber:         { type: "text",     label: "Numéro de suivi",                          placeholder: "Numéro de suivi si vous l'avez",                                              required: false },
-  returnId:               { type: "text",     label: "ID ReturnGo*",                             placeholder: "RTG-12345",                                                                   required: true  },
-  returnIdOpt:            { type: "text",     label: "ID ReturnGo",                              placeholder: "RTG-12345 si vous l'avez",                                                    required: false },
+  returnId:               { type: "text",     label: "ID ReturnGo*",                             placeholder: "ARM10984430",                                                                 required: true  },
+  returnIdOpt:            { type: "text",     label: "ID ReturnGo",                              placeholder: "ARM10984430 ou RMA10984430",                                                   required: false },
   message:                { type: "textarea", label: "Message*",                                 placeholder: "Décrivez votre demande.",                                                     required: true  },
   messageOpt:             { type: "textarea", label: "Message",                                  placeholder: "Ajoutez des précisions si besoin.",                                           required: false },
   modifDetail:            { type: "textarea", label: "Message*",                                 placeholder: "Décrivez ce que vous souhaitez modifier.",                                    required: true  },
@@ -46,7 +51,6 @@ const FLOW = {
           outcome: "ticket",
           orderStatusOms: "over_24h",
           fields: ["email", "orderNumber"],
-          agentNote: "Annulation > 24h : créer ticket et bloquer la commande dans Shippingbo."
         },
         {
           id: "annul_expediee", label: "Commande déjà expédiée",
@@ -67,7 +71,6 @@ const FLOW = {
           outcome: "ticket",
           orderStatusOms: "blocked_over_24h",
           fields: ["email", "orderNumber"],
-          agentNote: "Commande bloquée OMS > 24h : créer ticket."
         },
         {
           id: "annul_introuvable", label: "Commande introuvable",
@@ -75,7 +78,6 @@ const FLOW = {
           orderStatusOms: "not_found",
           topText: "Nous n'avons pas trouvé votre commande automatiquement. Vérifiez votre numéro avant d'envoyer la demande.",
           fields: ["email", "orderNumber"],
-          agentNote: "Commande introuvable : créer ticket et avertir le client."
         }
       ]
     },
@@ -89,9 +91,9 @@ const FLOW = {
           orderStatusOms: "not_shipped",
           question: "Que souhaitez-vous modifier ?",
           children: [
-            { id: "modif_non_exp_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "newAddress"], agentNote: "Commande non expédiée : mettre à jour l'adresse et créer un ticket informatif." },
-            { id: "modif_non_exp_produit", label: "Produit", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande non expédiée : bloquer la commande et créer un ticket." },
-            { id: "modif_non_exp_info", label: "Information de commande", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande non expédiée : créer ticket pour information de commande." }
+            { id: "modif_non_exp_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "newAddress"] },
+            { id: "modif_non_exp_produit", label: "Produit", outcome: "ticket", fields: ["email", "orderNumber", "message"] },
+            { id: "modif_non_exp_info", label: "Information de commande", outcome: "ticket", fields: ["email", "orderNumber", "message"] }
           ]
         },
         {
@@ -99,9 +101,9 @@ const FLOW = {
           orderStatusOms: "shipped",
           question: "Que souhaitez-vous modifier ?",
           children: [
-            { id: "modif_exp_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande expédiée : créer ticket SAV / transporteur pour adresse." },
+            { id: "modif_exp_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "message"] },
             { id: "modif_exp_produit", label: "Produit", outcome: "selfservice", selfservice: { title: "Retour / échange", body: "La commande est expédiée. Pour modifier un produit, utilisez le parcours Retour / échange.", ctaLabel: "Accéder au parcours Retour / échange", ctaHref: ART.retour } },
-            { id: "modif_exp_information", label: "Information", outcome: "ticket", fields: ["email", "orderNumber", "message"], agentNote: "Commande expédiée : créer ticket pour information." }
+            { id: "modif_exp_information", label: "Information", outcome: "ticket", fields: ["email", "orderNumber", "message"] }
           ]
         },
         {
@@ -109,7 +111,6 @@ const FLOW = {
           outcome: "ticket",
           orderStatusOms: "not_found",
           fields: ["email", "orderNumber", "message"],
-          agentNote: "Commande introuvable : créer ticket."
         }
       ]
     },
@@ -121,33 +122,28 @@ const FLOW = {
           id: "suivi_pas_suivi", label: "Je n'ai pas encore reçu de lien de suivi",
           outcome: "ticket",
           fields: ["email", "orderNumber"],
-          agentNote: "Créer ticket : client sans lien de suivi."
         },
         {
           id: "suivi_retard", label: "Mon colis est en retard",
           outcome: "ticket",
           fields: ["email", "orderNumber", "trackingNumber", "messageOpt"],
-          agentNote: "Vérifier tracking et délai transporteur."
         },
         {
           id: "suivi_bloque", label: "Mon suivi n'avance plus / colis bloqué",
           outcome: "ticket",
           fields: ["email", "orderNumber", "trackingNumber", "messageOpt"],
-          agentNote: "Contacter transporteur pour déblocage."
         },
         {
           id: "suivi_relais", label: "Problème avec le point relais",
           outcome: "ticket",
           fields: ["email", "orderNumber", "trackingNumber", "message"],
           extraLink: { label: "Je n'ai pas reçu mon code Mondial Relay — que faire ?", href: ART.pointRelais },
-          agentNote: "Vérifier suivi au point relais."
         },
         {
           id: "suivi_livre_non_recu", label: "Mon colis est indiqué livré mais je ne l'ai pas reçu",
           outcome: "ticket",
           topText: "Téléchargez l'attestation sur l'honneur générée, signez-la, puis joignez le document à votre demande.",
           fields: ["email", "orderNumber", "trackingNumber", "message", "neighborCheck", "attestationUpload_req"],
-          agentNote: "Livré non reçu : checkbox voisins obligatoire et attestation sur l'honneur signée à joindre."
         }
       ]
     },
@@ -159,7 +155,6 @@ const FLOW = {
           id: "retour_delai_non", label: "Non",
           outcome: "ticket",
           fields: ["email", "message"],
-          agentNote: "Hors délai 14 jours : traitement manuel SAV."
         },
         {
           id: "retour_delai_oui", label: "Oui",
@@ -187,7 +182,6 @@ const FLOW = {
               id: "retour_bloque", label: "Le portail retour ne fonctionne pas",
               outcome: "ticket",
               fields: ["email", "orderNumber", "message"],
-              agentNote: "Vérifier éligibilité ReturnGO. Créer retour manuellement si besoin."
             }
           ]
         }
@@ -201,13 +195,11 @@ const FLOW = {
           id: "remb_non_recu", label: "Je n'ai pas reçu mon remboursement",
           outcome: "ticket",
           fields: ["email", "returnIdOpt", "message"],
-          agentNote: "Remboursement non reçu : vérifier statut ReturnGo / paiement."
         },
         {
           id: "remb_montant_incorrect", label: "Le montant remboursé est incorrect",
           outcome: "ticket",
           fields: ["email", "returnIdOpt", "message"],
-          agentNote: "Montant remboursé incorrect : vérifier lignes de retour et paiement."
         }
       ]
     },
@@ -219,31 +211,26 @@ const FLOW = {
           id: "recep_endommage", label: "Produit endommagé",
           outcome: "ticket",
           fields: ["email", "orderNumber", "photoUpload_req", "message"],
-          agentNote: "Produit endommagé : photo obligatoire."
         },
         {
           id: "recep_manquant", label: "Produit manquant",
           outcome: "ticket",
           fields: ["email", "orderNumber", "photoUpload_opt", "message"],
-          agentNote: "Produit manquant."
         },
         {
           id: "recep_mauvais", label: "Mauvais produit reçu",
           outcome: "ticket",
           fields: ["email", "orderNumber", "photoUpload_req", "message"],
-          agentNote: "Mauvais produit reçu : photo obligatoire."
         },
         {
           id: "recep_incompatible", label: "Produit incompatible / mauvaise taille",
           outcome: "ticket",
           fields: ["email", "orderNumber", "message"],
-          agentNote: "Produit incompatible / mauvaise taille."
         },
         {
           id: "defectueux", label: "Produit défectueux",
           outcome: "ticket",
           fields: ["email", "orderNumber", "photoUpload_opt", "message"],
-          agentNote: "Produit défectueux."
         }
       ]
     },
@@ -251,7 +238,6 @@ const FLOW = {
       id: "autre", label: "Autre demande",
       outcome: "ticket",
       fields: ["email", "orderNumberOpt", "message"],
-      agentNote: "Autre demande : orienter selon le contenu."
     }
   ]
 };
@@ -479,6 +465,10 @@ function validate(node) {
     if (def.type === "file"     && !val) return "Une pièce jointe est obligatoire pour cette demande.";
     if (def.type !== "checkbox" && def.type !== "file" && (!val || !String(val).trim()))
       return `Le champ "${(def.label || key).replace("*", "")}" est requis.`;
+    if ((key === "orderNumber" || key === "orderNumberOpt") && val && !ORDER_NUMBER_RE.test(normalizeOrderNumber(val)))
+      return "Le numero de commande doit contenir uniquement des chiffres.";
+    if ((key === "returnId" || key === "returnIdOpt") && val && !RETURNGO_ID_RE.test(String(val).trim()))
+      return "L'ID ReturnGo doit etre au format ARM10984430 ou RMA10984430.";
   }
   return null;
 }
@@ -508,6 +498,7 @@ async function submitForm(node) {
 
   try {
     const orderStatusNode = [...state.path].reverse().find(item => item.orderStatusOms);
+    const normalizedOrderNumber = normalizeOrderNumber(state.values.orderNumber || state.values.orderNumberOpt || "");
     const contextNote = Object.entries(state.values)
       .filter(([key, value]) => {
         if (!value || typeof value !== "string" || !value.trim()) return false;
@@ -516,34 +507,33 @@ async function submitForm(node) {
       .map(([, value]) => value)
       .join("\n") || "";
 
+    const payload = {
+      email:       state.values.email       || "",
+      orderNumber: normalizedOrderNumber,
+      tracking:    state.values.trackingNumber || "",
+      returnId:    state.values.returnId    || state.values.returnIdOpt || "",
+      note:        contextNote,
+      category:    state.path[0]?.label     || "",
+      categoryId:  state.path[0]?.id        || "",
+      subIssue:    state.path[state.path.length - 1]?.label || "",
+      subIssueId:  state.path[state.path.length - 1]?.id    || "",
+      orderStatusOms: orderStatusNode?.orderStatusOms || "",
+      pathIds:     state.path.map(n => n.id)
+    };
+
+    const formData = new FormData();
+    formData.append("payload", JSON.stringify(payload));
+
+    (node.fields || []).forEach(key => {
+      const def = FIELD_DEFS[key];
+      const el = document.getElementById("f-" + key);
+      if (def?.type !== "file" || !el?.files?.length) return;
+      [...el.files].forEach(file => formData.append("attachments", file, file.name));
+    });
+
     const res  = await fetch("/api/zendesk", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email:       state.values.email       || "",
-        orderNumber: state.values.orderNumber || state.values.orderNumberOpt || "",
-        tracking:    state.values.trackingNumber || "",
-        returnId:    state.values.returnId    || state.values.returnIdOpt || "",
-        note:        contextNote,
-        photoUpload: !!(state.values.photoUpload_opt || state.values.photoUpload_req),
-        category:    state.path[0]?.label     || "",
-        categoryId:  state.path[0]?.id        || "",
-        subIssue:    state.path[state.path.length - 1]?.label || "",
-        subIssueId:  state.path[state.path.length - 1]?.id    || "",
-        orderStatusOms: orderStatusNode?.orderStatusOms || "",
-        agentNote:   node.agentNote           || "",
-        path:        state.path.map(n => n.label).join(" › "),
-        pathIds:     state.path.map(n => n.id),
-        pathLabels:  state.path.map(n => n.label),
-        formValues:  state.values,
-        articleLinks: {
-          annulation: ART.annulation,
-          retour: ART.retour,
-          nonConforme: ART.nonConforme,
-          defectueux: ART.defectueux,
-          pointRelais: ART.pointRelais
-        }
-      })
+      body: formData
     });
 
     const rawResponse = await res.text();
@@ -642,5 +632,3 @@ function openFaqFromHash() {
 
 window.addEventListener("DOMContentLoaded", openFaqFromHash);
 window.addEventListener("hashchange", openFaqFromHash);
-
-
