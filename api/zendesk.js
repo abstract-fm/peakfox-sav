@@ -7,6 +7,10 @@ const MAX_TEXT_LENGTH = 160;
 const MAX_PATH_IDS = 6;
 const MAX_FILES = 3;
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 5;
+const MIN_FORM_COMPLETION_MS = 2500;
+const MAX_FORM_COMPLETION_MS = 2 * 60 * 60 * 1000;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ORDER_NUMBER_RE = /^\d+$/;
 const RETURNGO_ID_RE = /^(ARM|RMA)\d{8}$/i;
@@ -61,10 +65,16 @@ const SUBISSUE_RULES = {
 
 Object.keys(SUBISSUE_RULES).forEach(id => KNOWN_PATH_IDS.add(id));
 
+let cachedZendeskMapping;
+const rateLimitBuckets = new Map();
+
 function loadZendeskMapping() {
+  if (cachedZendeskMapping) return cachedZendeskMapping;
+
   const raw = fs.readFileSync(mappingPath, "utf8");
   const parsed = JSON.parse(raw);
-  return parsed.customFields || {};
+  cachedZendeskMapping = parsed.customFields || {};
+  return cachedZendeskMapping;
 }
 
 function toZendeskTag(value) {
@@ -107,6 +117,88 @@ function formatZendeskError(errorData) {
 function getRequiredEnv(name) {
   const value = process.env[name];
   return typeof value === "string" ? value.trim() : "";
+}
+
+function parseAllowedOrigins(req) {
+  const configured = String(process.env.ALLOWED_ORIGINS || process.env.SITE_ORIGIN || "")
+    .split(",")
+    .map(origin => getHeaderOrigin(origin.trim()) || origin.trim().replace(/\/+$/g, ""))
+    .filter(Boolean);
+
+  if (configured.length) return new Set(configured);
+
+  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  if (!host) return new Set();
+
+  const proto = req.headers["x-forwarded-proto"] || "https";
+  return new Set([`${proto}://${host}`]);
+}
+
+function getHeaderOrigin(value) {
+  if (!value) return "";
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return "";
+  }
+}
+
+function isAllowedRequestOrigin(req) {
+  const allowedOrigins = parseAllowedOrigins(req);
+  const requestOrigin = getHeaderOrigin(req.headers.origin);
+  const refererOrigin = getHeaderOrigin(req.headers.referer);
+  const submittedOrigin = requestOrigin || refererOrigin;
+
+  return Boolean(submittedOrigin && allowedOrigins.has(submittedOrigin));
+}
+
+function getClientIp(req) {
+  const forwardedFor = String(req.headers["x-forwarded-for"] || "")
+    .split(",")
+    .map(value => value.trim())
+    .filter(Boolean);
+
+  return forwardedFor[0]
+    || req.headers["x-real-ip"]
+    || req.socket?.remoteAddress
+    || "unknown";
+}
+
+function isRateLimited(req) {
+  const now = Date.now();
+  const ip = getClientIp(req);
+  const bucket = rateLimitBuckets.get(ip);
+
+  if (!bucket || bucket.resetAt <= now) {
+    rateLimitBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  bucket.count += 1;
+  if (rateLimitBuckets.size > 1000) {
+    for (const [key, value] of rateLimitBuckets) {
+      if (value.resetAt <= now) rateLimitBuckets.delete(key);
+    }
+  }
+
+  return bucket.count > RATE_LIMIT_MAX_REQUESTS;
+}
+
+function validateSpamProtection(body = {}) {
+  const errors = [];
+  const honeypot = cleanText(body.companyWebsite, 500);
+  const formRenderedAt = Number(body.formRenderedAt || 0);
+  const elapsed = Date.now() - formRenderedAt;
+
+  if (honeypot) errors.push("Requete invalide.");
+  if (!Number.isFinite(formRenderedAt) || formRenderedAt <= 0) {
+    errors.push("Requete invalide.");
+  } else if (elapsed < MIN_FORM_COMPLETION_MS || elapsed > MAX_FORM_COMPLETION_MS) {
+    errors.push("Requete invalide.");
+  }
+
+  return errors;
 }
 
 function cleanText(value, maxLength = MAX_TEXT_LENGTH) {
@@ -328,13 +420,33 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (!isAllowedRequestOrigin(req)) {
+    return res.status(403).json({ error: "Requete non autorisee." });
+  }
+
+  if (isRateLimited(req)) {
+    return res.status(429).json({ error: "Trop de demandes. Reessayez plus tard." });
+  }
+
   let requestData;
   try {
     requestData = await getRequestPayload(req);
   } catch (error) {
+    console.error("Requete Zendesk invalide:", {
+      message: error?.message,
+      stack: error?.stack
+    });
+
     return res.status(400).json({
-      error: "Requete invalide.",
-      details: error?.message || "Payload impossible a lire."
+      error: "Requete invalide."
+    });
+  }
+
+  const spamErrors = validateSpamProtection(requestData.body);
+  if (spamErrors.length) {
+    return res.status(400).json({
+      error: spamErrors[0],
+      details: spamErrors
     });
   }
 
@@ -367,13 +479,14 @@ module.exports = async function handler(req, res) {
   const zendeskDomain = getRequiredEnv("ZENDESK_DOMAIN");
 
   if (!zendeskEmail || !zendeskToken || !zendeskDomain) {
+    console.error("Configuration Zendesk manquante:", {
+      ZENDESK_EMAIL: Boolean(zendeskEmail),
+      ZENDESK_TOKEN: Boolean(zendeskToken),
+      ZENDESK_DOMAIN: Boolean(zendeskDomain)
+    });
+
     return res.status(500).json({
-      error: "Configuration Zendesk manquante",
-      details: {
-        ZENDESK_EMAIL: Boolean(zendeskEmail),
-        ZENDESK_TOKEN: Boolean(zendeskToken),
-        ZENDESK_DOMAIN: Boolean(zendeskDomain)
-      }
+      error: "Service temporairement indisponible."
     });
   }
 
@@ -458,8 +571,7 @@ module.exports = async function handler(req, res) {
       });
 
       return res.status(response.status).json({
-        error: formatZendeskError(errorData),
-        details: errorData
+        error: "Impossible de creer la demande pour le moment."
       });
     }
 
@@ -471,16 +583,12 @@ module.exports = async function handler(req, res) {
       message: error?.message,
       stack: error?.stack,
       causeMessage: error?.cause?.message,
-      causeCode: error?.cause?.code
+      causeCode: error?.cause?.code,
+      zendeskDetails: error?.details
     });
 
     return res.status(500).json({
-      error: error?.message || "Erreur interne du serveur.",
-      details: {
-        causeMessage: error?.cause?.message || null,
-        causeCode: error?.cause?.code || null,
-        zendeskDomain
-      }
+      error: "Erreur interne du serveur."
     });
   }
 };

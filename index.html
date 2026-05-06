@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -87,7 +87,7 @@
 
         <div class="faq-search-wrap">
           <span class="faq-search-icon">🔍</span>
-          <input class="faq-search-input" type="text" id="faqSearch" placeholder="Rechercher un article…" oninput="filterFaqArticles(this.value)" />
+          <input class="faq-search-input" type="text" id="faqSearch" placeholder="Rechercher un article…" />
         </div>
 
         <div class="faq-cats">
@@ -104,7 +104,7 @@
           <div class="faq-section-head"><span class="faq-section-emoji">📦</span><h3>Expédition & livraison</h3></div>
           <div class="faq-articles">
             <div class="faq-article-card" data-search="expédition livraison délai">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Combien de temps pour qu'une commande soit expédiée ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -116,7 +116,7 @@
             </div>
 
             <div class="faq-article-card" data-search="délai livraison combien temps">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Quel est le délai de livraison ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -128,7 +128,7 @@
             </div>
 
             <div class="faq-article-card" data-search="suivi commande tracking numéro">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Comment suivre ma commande ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -140,7 +140,7 @@
             </div>
 
             <div class="faq-article-card" data-search="livraison gratuite frais port">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 La livraison est-elle gratuite ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -151,7 +151,7 @@
             </div>
 
             <div class="faq-article-card" data-search="transporteur partenaire poste chronopost">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Quels sont vos transporteurs ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -162,7 +162,7 @@
             </div>
 
             <div class="faq-article-card" data-search="livraison weekend samedi dimanche">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Livrez-vous le week-end ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -173,7 +173,7 @@
             </div>
 
             <div class="faq-article-card" data-search="point relais mondial relay code pas reçu">
-              <button class="faq-article-btn" onclick="toggleFaq(this)" id="art-point-relais">
+              <button class="faq-article-btn" id="art-point-relais">
                 Je n'ai pas reçu mon code de point relais Mondial Relay — que faire ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -197,7 +197,7 @@
           <div class="faq-section-head"><span class="faq-section-emoji">↩</span><h3>Retours & remboursements</h3></div>
           <div class="faq-articles">
             <div class="faq-article-card" data-search="retour comment faire procédure portail">
-              <button class="faq-article-btn" onclick="toggleFaq(this)" id="art-faire-retour">
+              <button class="faq-article-btn" id="art-faire-retour">
                 Comment faire un retour ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -217,7 +217,7 @@
             </div>
 
             <div class="faq-article-card" data-search="retour produit non conforme endommagé mauvais défectueux">
-              <button class="faq-article-btn" onclick="toggleFaq(this)" id="art-non-conforme">
+              <button class="faq-article-btn" id="art-non-conforme">
                 Comment faire un retour pour un produit non conforme ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -234,7 +234,7 @@
             </div>
 
             <div class="faq-article-card" data-search="remboursement délai quand recevoir">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Quand vais-je recevoir mon remboursement ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -246,7 +246,7 @@
             </div>
 
             <div class="faq-article-card" data-search="frais retour à charge qui paye">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Qui prend en charge les frais de retour ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -258,7 +258,7 @@
             </div>
 
             <div class="faq-article-card" data-search="défectueux produit retour moins 10 jours">
-              <button class="faq-article-btn" onclick="toggleFaq(this)" id="art-defectueux">
+              <button class="faq-article-btn" id="art-defectueux">
                 Mon produit est défectueux — comment faire un retour ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -281,7 +281,7 @@
           <div class="faq-section-head"><span class="faq-section-emoji">✕</span><h3>Annulation de commande</h3></div>
           <div class="faq-articles">
             <div class="faq-article-card" data-search="annuler commande comment procédure">
-              <button class="faq-article-btn" onclick="toggleFaq(this)" id="art-annulation">
+              <button class="faq-article-btn" id="art-annulation">
                 Annuler ma commande — procédure
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -305,7 +305,7 @@
           <div class="faq-section-head"><span class="faq-section-emoji">🔎</span><h3>Suivi de colis</h3></div>
           <div class="faq-articles">
             <div class="faq-article-card" data-search="colis livré non reçu pas reçu marqué">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Mon colis est marqué livré mais je ne l'ai pas reçu
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -329,7 +329,7 @@
           <div class="faq-section-head"><span class="faq-section-emoji">⌚</span><h3>Produits</h3></div>
           <div class="faq-articles">
             <div class="faq-article-card" data-search="originaux garmin générique compatibles">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Vos produits sont-ils des originaux Garmin ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -340,7 +340,7 @@
             </div>
 
             <div class="faq-article-card" data-search="garantie produit durée">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Proposez-vous une garantie ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -357,7 +357,7 @@
           <div class="faq-section-head"><span class="faq-section-emoji">💬</span><h3>Autres questions</h3></div>
           <div class="faq-articles">
             <div class="faq-article-card" data-search="paiement sécurisé visa mastercard">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Les paiements sont-ils sécurisés ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -368,7 +368,7 @@
             </div>
 
             <div class="faq-article-card" data-search="contacter service client support">
-              <button class="faq-article-btn" onclick="toggleFaq(this)">
+              <button class="faq-article-btn">
                 Comment vous contacter ?
                 <span class="faq-article-btn-icon">▾</span>
               </button>
@@ -391,6 +391,6 @@
     </section>
   </main>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
