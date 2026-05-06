@@ -2,8 +2,9 @@
   "name": "mon-formulaire-zendesk",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "test": "node test/zendesk.test.js"
   },
   "keywords": [],
