@@ -1,3 +1,15 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "builds": [
+    { "src": "*.html", "use": "@vercel/static" },
+    { "src": "*.css", "use": "@vercel/static" },
+    { "src": "*.js", "use": "@vercel/static" },
+    { "src": "*.mjs", "use": "@vercel/static" },
+    { "src": "api/zendesk.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/zendesk", "dest": "/api/zendesk.js" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
 }
