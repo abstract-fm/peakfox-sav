@@ -1,17 +1,21 @@
 ﻿import { FIELD_DEFS, normalizeOrderNumber } from "./flow-data.mjs";
 
 function collectContextNote(values) {
+  const excludedKeys = new Set([
+    "email",
+    "orderNumber",
+    "orderNumberOpt",
+    "trackingNumber",
+    "returnId",
+    "returnIdOpt"
+  ]);
+
   return Object.entries(values)
     .filter(([key, value]) => {
       if (!value || typeof value !== "string" || !value.trim()) return false;
-      return key.endsWith("_context")
-        || key.endsWith("Message")
-        || key === "message"
-        || key === "messageOpt"
-        || key === "modifDetail"
-        || key === "newAddress";
+      return !excludedKeys.has(key);
     })
-    .map(([, value]) => value)
+    .map(([key, value]) => `${FIELD_DEFS[key]?.label?.replace("*", "") || key}: ${value}`)
     .join("\n") || "";
 }
 

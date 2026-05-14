@@ -20,47 +20,38 @@ const CATEGORY_IDS = new Set([
   "modification",
   "suivi",
   "retour",
-  "remboursement",
-  "reception",
-  "autre"
+  "reception"
 ]);
 const KNOWN_PATH_IDS = new Set([
   ...CATEGORY_IDS,
-  "modif_non_expediee",
-  "modif_expediee",
-  "retour_delai_oui"
+  "retour_deja_oui",
+  "retour_deja_non",
+  "retour_non_probleme"
 ]);
 const SUBISSUE_RULES = {
-  annul_plus_24h: { categoryId: "annulation", requireOrder: true },
-  annul_oms_plus_24h: { categoryId: "annulation", requireOrder: true },
-  annul_introuvable: { categoryId: "annulation", requireOrder: true },
+  annulation: { categoryId: "annulation", requireOrder: true },
 
-  modif_non_exp_adresse: { categoryId: "modification", requireOrder: true, requireNote: true },
-  modif_non_exp_produit: { categoryId: "modification", requireOrder: true, requireNote: true },
-  modif_non_exp_info: { categoryId: "modification", requireOrder: true, requireNote: true },
-  modif_exp_adresse: { categoryId: "modification", requireOrder: true, requireNote: true },
-  modif_exp_information: { categoryId: "modification", requireOrder: true, requireNote: true },
-  modif_introuvable: { categoryId: "modification", requireOrder: true, requireNote: true },
+  modif_adresse: { categoryId: "modification", requireOrder: true, requireNote: true },
+  modif_produit: { categoryId: "modification", requireOrder: true, requireNote: true },
+  modif_information: { categoryId: "modification", requireOrder: true, requireNote: true },
 
   suivi_pas_suivi: { categoryId: "suivi", requireOrder: true },
   suivi_retard: { categoryId: "suivi", requireOrder: true },
-  suivi_bloque: { categoryId: "suivi", requireOrder: true },
+  suivi_bloque: { categoryId: "suivi", requireOrder: true, requireNote: true },
   suivi_relais: { categoryId: "suivi", requireOrder: true, requireNote: true },
   suivi_livre_non_recu: { categoryId: "suivi", requireOrder: true, requireNote: true, requireAttachment: true },
 
-  retour_delai_non: { categoryId: "retour", requireNote: true },
-  retour_bloque: { categoryId: "retour", requireOrder: true, requireNote: true },
+  retour_remboursement: { categoryId: "retour", requireNote: true },
+  retour_echange_probleme: { categoryId: "retour", requireNote: true },
+  retour_suivre: { categoryId: "retour", requireNote: true },
+  retour_refuse: { categoryId: "retour", requireNote: true },
+  retour_autre: { categoryId: "retour", requireNote: true },
+  retour_portail_ko: { categoryId: "retour", requireOrder: true, requireNote: true },
+  retour_commande_introuvable: { categoryId: "retour", requireOrder: true, requireNote: true },
+  retour_refuse_sans_demande: { categoryId: "retour", requireOrder: true, requireNote: true },
+  retour_probleme_autre: { categoryId: "retour", requireOrder: true, requireNote: true },
 
-  remb_non_recu: { categoryId: "remboursement", requireNote: true },
-  remb_montant_incorrect: { categoryId: "remboursement", requireNote: true },
-
-  recep_endommage: { categoryId: "reception", requireOrder: true, requireNote: true, requireAttachment: true },
-  recep_manquant: { categoryId: "reception", requireOrder: true, requireNote: true },
-  recep_mauvais: { categoryId: "reception", requireOrder: true, requireNote: true, requireAttachment: true },
-  recep_incompatible: { categoryId: "reception", requireOrder: true, requireNote: true },
-  defectueux: { categoryId: "reception", requireOrder: true, requireNote: true },
-
-  autre: { categoryId: "autre", requireNote: true }
+  recep_incompatible: { categoryId: "reception", requireOrder: true, requireNote: true }
 };
 
 Object.keys(SUBISSUE_RULES).forEach(id => KNOWN_PATH_IDS.add(id));

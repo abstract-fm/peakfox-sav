@@ -30,10 +30,10 @@ function validBody(overrides = {}) {
     note: "Message client",
     category: "Annuler ma commande",
     categoryId: "annulation",
-    subIssue: "Commande > 24h",
-    subIssueId: "annul_plus_24h",
-    orderStatusOms: "over_24h",
-    pathIds: ["annulation", "annul_plus_24h"],
+    subIssue: "Annuler ma commande",
+    subIssueId: "annulation",
+    orderStatusOms: "",
+    pathIds: ["annulation"],
     formRenderedAt: Date.now() - 5000,
     companyWebsite: "",
     ...overrides
@@ -133,12 +133,12 @@ test("builds the Zendesk ticket payload from sanitized submission data", async (
   const res = await postZendesk(validBody({
     orderNumber: "#98 76",
     note: "Merci de traiter cette demande.",
-    category: "Autre demande",
-    categoryId: "autre",
-    subIssue: "Autre demande",
-    subIssueId: "autre",
+    category: "Retour / échange",
+    categoryId: "retour",
+    subIssue: "Autre problème",
+    subIssueId: "retour_probleme_autre",
     orderStatusOms: "",
-    pathIds: ["autre"]
+    pathIds: ["retour", "retour_non_probleme", "retour_probleme_autre"]
   }));
 
   assert.equal(res.statusCode, 200);
@@ -148,7 +148,7 @@ test("builds the Zendesk ticket payload from sanitized submission data", async (
     name: "customer@example.com",
     email: "customer@example.com"
   });
-  assert.equal(payload.ticket.subject, "[SAV] Autre demande - Autre demande - Commande 9876");
+  assert.equal(payload.ticket.subject, "[SAV] Retour / échange - Autre problème - Commande 9876");
   assert.equal(payload.ticket.comment.body, "Merci de traiter cette demande.");
   assert.equal(payload.ticket.custom_fields.find(field => field.id === 48861908767892).value, "9876");
 });

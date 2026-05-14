@@ -1,8 +1,6 @@
-﻿export const ART = {
-  annulation:  "#annulation",
-  retour:      "#faire-retour",
-  nonConforme: "#non-conforme",
-  defectueux:  "#defectueux",
+export const ART = {
+  annulation: "#annulation",
+  retour: "#faire-retour",
   pointRelais: "#point-relais"
 };
 
@@ -13,230 +11,172 @@ export function normalizeOrderNumber(value) {
   return String(value || "").replace(/\D/g, "");
 }
 
+const returnGoSelfservice = {
+  title: "Portail ReturnGo",
+  body: "Cette demande se fait directement depuis le portail ReturnGo.",
+  ctaLabel: "Accéder au portail ReturnGo",
+  ctaHref: ART.retour
+};
+
 export const FIELD_DEFS = {
-  email:                  { type: "email",    label: "Adresse e-mail*",                          placeholder: "vous@email.com",                                                              required: true  },
-  orderNumber:            { type: "text",     label: "Numéro de commande*",                      placeholder: "#12345",                                                                      required: true  },
-  orderNumberOpt:         { type: "text",     label: "Numéro de commande",                       placeholder: "#12345",                                                                      required: false },
-  trackingNumber:         { type: "text",     label: "Numéro de suivi",                          placeholder: "Numéro de suivi si vous l'avez",                                              required: false },
-  returnId:               { type: "text",     label: "ID ReturnGo*",                             placeholder: "ARM10984430",                                                                 required: true  },
-  returnIdOpt:            { type: "text",     label: "ID ReturnGo",                              placeholder: "ARM10984430 ou RMA10984430",                                                   required: false },
-  message:                { type: "textarea", label: "Message*",                                 placeholder: "Décrivez votre demande.",                                                     required: true  },
-  messageOpt:             { type: "textarea", label: "Message",                                  placeholder: "Ajoutez des précisions si besoin.",                                           required: false },
-  modifDetail:            { type: "textarea", label: "Message*",                                 placeholder: "Décrivez ce que vous souhaitez modifier.",                                    required: true  },
-  newAddress:             { type: "textarea", label: "Nouvelle adresse*",                        placeholder: "Nom, adresse, complément, code postal, ville, pays, téléphone.",               required: true  },
-  neighborCheck:          { type: "checkbox", label: "J'ai vérifié chez mes voisins*",           required: true  },
-  photoUpload_opt:        { type: "file",     label: "Joindre une pièce jointe (optionnel)",     required: false },
-  photoUpload_req:        { type: "file",     label: "Joindre une photo obligatoire*",           required: true  },
-  attestationUpload_req:  { type: "file",     label: "Joindre l'attestation sur l'honneur signée*", required: true }
+  email: { type: "email", label: "Adresse e-mail*", placeholder: "vous@email.com", required: true },
+  orderNumber: { type: "text", label: "Numéro de commande*", placeholder: "#12345", required: true },
+  trackingNumber: { type: "text", label: "Numéro de suivi", placeholder: "Numéro de suivi si vous l'avez", required: false },
+  returnId: { type: "text", label: "Numéro ReturnGo*", placeholder: "ARM10984430", required: true },
+  message: { type: "textarea", label: "Message*", placeholder: "Décrivez votre demande.", required: true },
+  messageOpt: { type: "textarea", label: "Message", placeholder: "Ajoutez des précisions si besoin.", required: false },
+  fullName: { type: "text", label: "Nom / prénom*", placeholder: "Votre nom et prénom", required: true },
+  newAddress: { type: "textarea", label: "Nouvelle adresse complète*", placeholder: "Rue, bâtiment, appartement, complément...", required: true },
+  postalCode: { type: "text", label: "Code postal*", placeholder: "75001", required: true },
+  city: { type: "text", label: "Ville*", placeholder: "Paris", required: true },
+  country: { type: "text", label: "Pays*", placeholder: "France", required: true },
+  phone: { type: "tel", label: "Téléphone*", placeholder: "+33 6 12 34 56 78", required: true },
+  currentProduct: { type: "text", label: "Produit actuel*", placeholder: "Produit ou variante actuelle", required: true },
+  desiredProduct: { type: "text", label: "Nouveau produit souhaité*", placeholder: "Produit ou variante souhaitée", required: true },
+  watchModel: { type: "text", label: "Modèle de montre*", placeholder: "Ex. Apple Watch Series 9 45 mm", required: true },
+  neighborCheck: { type: "checkbox", label: "J'ai vérifié chez mes voisins*", required: true },
+  attestationUpload_req: { type: "file", label: "Joindre l'attestation sur l'honneur signée*", required: true }
 };
 
 export const FLOW = {
   rootQuestion: "Pourquoi nous contactez-vous ?",
   categories: [
     {
-      id: "annulation", label: "Annuler ma commande",
-      question: "Vérification commande (Shippingbo)",
-      topBanner: "Renseignez votre e-mail et votre numéro de commande après le choix du statut Shippingbo.",
+      id: "annulation",
+      label: "Annuler ma commande",
+      outcome: "ticket",
+      fields: ["email", "orderNumber"]
+    },
+    {
+      id: "modification",
+      label: "Modifier ma commande",
+      question: "Que souhaitez-vous modifier ?",
       children: [
         {
-          id: "annul_moins_24h", label: "Commande < 24h",
-          outcome: "selfservice",
-          orderStatusOms: "under_24h",
-          fields: ["email", "orderNumber"],
-          selfservice: { title: "Annulation en self-service", body: "Votre commande est éligible au portail ReturnGo. Aucun ticket SAV n'est créé.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
-        },
-        {
-          id: "annul_plus_24h", label: "Commande > 24h",
+          id: "modif_adresse",
+          label: "Adresse de livraison",
           outcome: "ticket",
-          orderStatusOms: "over_24h",
-          fields: ["email", "orderNumber"],
+          fields: ["email", "orderNumber", "fullName", "newAddress", "postalCode", "city", "country", "phone"]
         },
         {
-          id: "annul_expediee", label: "Commande déjà expédiée",
-          outcome: "selfservice",
-          orderStatusOms: "shipped",
-          fields: ["email", "orderNumber"],
-          selfservice: { title: "Annulation impossible", body: "La commande est déjà expédiée. L'annulation n'est plus possible et aucun ticket n'est créé.", ctaLabel: "Voir les retours / échanges", ctaHref: ART.retour }
-        },
-        {
-          id: "annul_oms_moins_24h", label: "Commande bloquée OMS (< 24h)",
-          outcome: "selfservice",
-          orderStatusOms: "blocked_under_24h",
-          fields: ["email", "orderNumber"],
-          selfservice: { title: "Annulation en self-service", body: "Votre commande est bloquée OMS et éligible au portail ReturnGo. Aucun ticket SAV n'est créé.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
-        },
-        {
-          id: "annul_oms_plus_24h", label: "Commande bloquée OMS (> 24h)",
+          id: "modif_produit",
+          label: "Produit / variante",
           outcome: "ticket",
-          orderStatusOms: "blocked_over_24h",
-          fields: ["email", "orderNumber"],
+          fields: ["email", "orderNumber", "currentProduct", "desiredProduct", "message"]
         },
         {
-          id: "annul_introuvable", label: "Commande introuvable",
+          id: "modif_information",
+          label: "Information de commande",
           outcome: "ticket",
-          orderStatusOms: "not_found",
-          topText: "Nous n'avons pas trouvé votre commande automatiquement. Vérifiez votre numéro avant d'envoyer la demande.",
-          fields: ["email", "orderNumber"],
+          fields: ["email", "orderNumber", "message"]
         }
       ]
     },
     {
-      id: "modification", label: "Modifier ma commande",
-      question: "Vérification commande (Shippingbo)",
-      topBanner: "Renseignez votre e-mail et votre numéro de commande dans l'étape finale.",
-      children: [
-        {
-          id: "modif_non_expediee", label: "Commande non expédiée",
-          orderStatusOms: "not_shipped",
-          question: "Que souhaitez-vous modifier ?",
-          children: [
-            { id: "modif_non_exp_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "newAddress"] },
-            { id: "modif_non_exp_produit", label: "Produit", outcome: "ticket", fields: ["email", "orderNumber", "message"] },
-            { id: "modif_non_exp_info", label: "Information de commande", outcome: "ticket", fields: ["email", "orderNumber", "message"] }
-          ]
-        },
-        {
-          id: "modif_expediee", label: "Commande expédiée",
-          orderStatusOms: "shipped",
-          question: "Que souhaitez-vous modifier ?",
-          children: [
-            { id: "modif_exp_adresse", label: "Adresse", outcome: "ticket", fields: ["email", "orderNumber", "message"] },
-            { id: "modif_exp_produit", label: "Produit", outcome: "selfservice", selfservice: { title: "Retour / échange", body: "La commande est expédiée. Pour modifier un produit, utilisez le parcours Retour / échange.", ctaLabel: "Accéder au parcours Retour / échange", ctaHref: ART.retour } },
-            { id: "modif_exp_information", label: "Information", outcome: "ticket", fields: ["email", "orderNumber", "message"] }
-          ]
-        },
-        {
-          id: "modif_introuvable", label: "Commande introuvable",
-          outcome: "ticket",
-          orderStatusOms: "not_found",
-          fields: ["email", "orderNumber", "message"],
-        }
-      ]
-    },
-    {
-      id: "suivi", label: "Problème de livraison / suivi",
+      id: "suivi",
+      label: "Problème de livraison / suivi",
       question: "Quel est votre problème ?",
       children: [
         {
-          id: "suivi_pas_suivi", label: "Je n'ai pas encore reçu de lien de suivi",
+          id: "suivi_pas_suivi",
+          label: "Je n'ai pas encore reçu de lien de suivi",
           outcome: "ticket",
-          fields: ["email", "orderNumber"],
+          fields: ["email", "orderNumber"]
         },
         {
-          id: "suivi_retard", label: "Mon colis est en retard",
+          id: "suivi_retard",
+          label: "Mon colis est en retard",
           outcome: "ticket",
-          fields: ["email", "orderNumber", "trackingNumber", "messageOpt"],
+          fields: ["email", "orderNumber", "trackingNumber", "messageOpt"]
         },
         {
-          id: "suivi_bloque", label: "Mon suivi n'avance plus / colis bloqué",
+          id: "suivi_bloque",
+          label: "Mon suivi n'avance plus / colis bloqué",
           outcome: "ticket",
-          fields: ["email", "orderNumber", "trackingNumber", "messageOpt"],
+          fields: ["email", "orderNumber", "trackingNumber", "message"]
         },
         {
-          id: "suivi_relais", label: "Problème avec le point relais",
+          id: "suivi_relais",
+          label: "Problème avec le point relais",
           outcome: "ticket",
-          fields: ["email", "orderNumber", "trackingNumber", "message"],
-          extraLink: { label: "Je n'ai pas reçu mon code Mondial Relay — que faire ?", href: ART.pointRelais },
+          fields: ["email", "orderNumber", "trackingNumber", "message"]
         },
         {
-          id: "suivi_livre_non_recu", label: "Mon colis est indiqué livré mais je ne l'ai pas reçu",
+          id: "suivi_livre_non_recu",
+          label: "Mon colis est indiqué livré mais je ne l'ai pas reçu",
           outcome: "ticket",
-          topText: "Téléchargez l'attestation sur l'honneur générée, signez-la, puis joignez le document à votre demande.",
-          fields: ["email", "orderNumber", "trackingNumber", "message", "neighborCheck", "attestationUpload_req"],
+          topText: "Téléchargez l'attestation sur l'honneur, signez-la, puis joignez le document à votre demande.",
+          fields: ["email", "orderNumber", "trackingNumber", "message", "neighborCheck", "attestationUpload_req"]
         }
       ]
     },
     {
-      id: "retour", label: "Retour / échange",
-      question: "Délai depuis réception ≤ 14 jours ?",
+      id: "retour",
+      label: "Retour / échange",
+      question: "Avez-vous déjà effectué une demande de retour / échange ?",
       children: [
         {
-          id: "retour_delai_non", label: "Non",
-          outcome: "ticket",
-          fields: ["email", "message"],
+          id: "retour_deja_oui",
+          label: "Oui",
+          question: "Quel est votre problème ?",
+          children: [
+            { id: "retour_remboursement", label: "Problème de remboursement", outcome: "ticket", fields: ["email", "returnId", "message"] },
+            { id: "retour_echange_probleme", label: "Problème avec mon échange", outcome: "ticket", fields: ["email", "returnId", "message"] },
+            { id: "retour_suivre", label: "Suivre mon retour / échange", outcome: "ticket", fields: ["email", "returnId", "message"] },
+            { id: "retour_refuse", label: "Mon retour a été refusé", outcome: "ticket", fields: ["email", "returnId", "message"] },
+            { id: "retour_autre", label: "Autre problème", outcome: "ticket", fields: ["email", "returnId", "message"] }
+          ]
         },
         {
-          id: "retour_delai_oui", label: "Oui",
+          id: "retour_deja_non",
+          label: "Non",
           question: "Que souhaitez-vous faire ?",
           children: [
             {
-              id: "retour_faire", label: "Faire un retour",
+              id: "retour_faire",
+              label: "Faire un retour",
               outcome: "selfservice",
               fields: ["email", "orderNumber"],
-              selfservice: { title: "Retour en self-service", body: "Votre demande est éligible au portail ReturnGo. Aucun ticket SAV n'est créé.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
+              selfservice: returnGoSelfservice
             },
             {
-              id: "retour_echange", label: "Faire un échange",
+              id: "retour_echange",
+              label: "Faire un échange",
               outcome: "selfservice",
               fields: ["email", "orderNumber"],
-              selfservice: { title: "Échange en self-service", body: "Votre demande est éligible au portail ReturnGo. Aucun ticket SAV n'est créé.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
-            },
-            {
-              id: "retour_suivi", label: "Suivre mon retour / échange",
-              outcome: "selfservice",
-              fields: ["email", "returnId"],
-              selfservice: { title: "Suivi ReturnGo", body: "Le suivi de votre retour ou échange se fait directement depuis le portail ReturnGo.", ctaLabel: "Accéder au portail ReturnGo", ctaHref: ART.retour }
-            },
-            {
-              id: "retour_bloque", label: "Le portail retour ne fonctionne pas",
-              outcome: "ticket",
-              fields: ["email", "orderNumber", "message"],
+              selfservice: returnGoSelfservice
             }
+          ]
+        },
+        {
+          id: "retour_non_probleme",
+          label: "Non, j'ai eu un problème",
+          question: "Quel est le problème ?",
+          children: [
+            { id: "retour_portail_ko", label: "Le portail ne fonctionne pas", outcome: "ticket", fields: ["email", "orderNumber", "message"] },
+            { id: "retour_commande_introuvable", label: "Je ne trouve pas ma commande", outcome: "ticket", fields: ["email", "orderNumber", "message"] },
+            { id: "retour_refuse_sans_demande", label: "Mon retour a été refusé", outcome: "ticket", fields: ["email", "orderNumber", "message"] },
+            { id: "retour_probleme_autre", label: "Autre problème", outcome: "ticket", fields: ["email", "orderNumber", "message"] }
           ]
         }
       ]
     },
     {
-      id: "remboursement", label: "Remboursement",
-      question: "Quel est votre problème ?",
-      children: [
-        {
-          id: "remb_non_recu", label: "Je n'ai pas reçu mon remboursement",
-          outcome: "ticket",
-          fields: ["email", "returnIdOpt", "message"],
-        },
-        {
-          id: "remb_montant_incorrect", label: "Le montant remboursé est incorrect",
-          outcome: "ticket",
-          fields: ["email", "returnIdOpt", "message"],
-        }
-      ]
-    },
-    {
-      id: "reception", label: "Problème avec un produit reçu",
+      id: "reception",
+      label: "Problème avec un produit reçu",
       question: "Quel est le problème ?",
       children: [
+        { id: "recep_endommage", label: "Produit endommagé", outcome: "selfservice", selfservice: returnGoSelfservice },
+        { id: "recep_manquant", label: "Produit manquant", outcome: "selfservice", selfservice: returnGoSelfservice },
+        { id: "recep_mauvais", label: "Mauvais produit reçu", outcome: "selfservice", selfservice: returnGoSelfservice },
         {
-          id: "recep_endommage", label: "Produit endommagé",
+          id: "recep_incompatible",
+          label: "Produit incompatible / mauvaise taille",
           outcome: "ticket",
-          fields: ["email", "orderNumber", "photoUpload_req", "message"],
+          fields: ["email", "watchModel", "orderNumber", "message"]
         },
-        {
-          id: "recep_manquant", label: "Produit manquant",
-          outcome: "ticket",
-          fields: ["email", "orderNumber", "photoUpload_opt", "message"],
-        },
-        {
-          id: "recep_mauvais", label: "Mauvais produit reçu",
-          outcome: "ticket",
-          fields: ["email", "orderNumber", "photoUpload_req", "message"],
-        },
-        {
-          id: "recep_incompatible", label: "Produit incompatible / mauvaise taille",
-          outcome: "ticket",
-          fields: ["email", "orderNumber", "message"],
-        },
-        {
-          id: "defectueux", label: "Produit défectueux",
-          outcome: "ticket",
-          fields: ["email", "orderNumber", "photoUpload_opt", "message"],
-        }
+        { id: "defectueux", label: "Produit défectueux", outcome: "selfservice", selfservice: returnGoSelfservice }
       ]
-    },
-    {
-      id: "autre", label: "Autre demande",
-      outcome: "ticket",
-      fields: ["email", "orderNumberOpt", "message"],
     }
   ]
 };

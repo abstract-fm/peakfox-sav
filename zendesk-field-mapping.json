@@ -8,25 +8,18 @@
         "modification": "order_modification",
         "suivi": "delivery_issue",
         "retour": "return_exchange",
-        "remboursement": "refund_issue",
-        "reception": "product_issue",
-        "autre": "other"
+        "reception": "product_issue"
       }
     },
     "subCategory": {
       "id": 48861884014740,
       "source": "subIssueId",
       "values": {
-        "annul_plus_24h": "cancel_request",
-        "annul_oms_plus_24h": "cancel_request",
-        "annul_introuvable": "cancel_request",
+        "annulation": "cancel_request",
 
-        "modif_non_exp_adresse": "modify_address",
-        "modif_exp_adresse": "modify_address",
-        "modif_non_exp_produit": "modify_product",
-        "modif_non_exp_info": "modify_information",
-        "modif_exp_information": "modify_information",
-        "modif_introuvable": "modify_information",
+        "modif_adresse": "modify_address",
+        "modif_produit": "modify_product",
+        "modif_information": "modify_information",
 
         "suivi_pas_suivi": "no_tracking_received",
         "suivi_retard": "package_delayed",
@@ -34,19 +27,17 @@
         "suivi_relais": "pickup_point_issue",
         "suivi_livre_non_recu": "delivered_not_received",
 
-        "retour_delai_non": "return_out_of_window",
-        "retour_bloque": "return_portal_issue",
+        "retour_remboursement": "refund_issue",
+        "retour_echange_probleme": "exchange_issue",
+        "retour_suivre": "return_exchange_tracking",
+        "retour_refuse": "return_refused",
+        "retour_autre": "return_exchange_other",
+        "retour_portail_ko": "return_portal_issue",
+        "retour_commande_introuvable": "return_order_not_found",
+        "retour_refuse_sans_demande": "return_refused",
+        "retour_probleme_autre": "return_exchange_other",
 
-        "remb_non_recu": "refund_not_received",
-        "remb_montant_incorrect": "refund_incorrect_amount",
-
-        "recep_endommage": "damaged_product",
-        "recep_manquant": "missing_product",
-        "recep_mauvais": "wrong_product",
-        "recep_incompatible": "incompatible_product",
-        "defectueux": "defective_product",
-
-        "autre": "other_request"
+        "recep_incompatible": "incompatible_product"
       }
     },
     "orderStatusOms": {
