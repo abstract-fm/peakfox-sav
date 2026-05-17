@@ -1,148 +1,141 @@
-Pourquoi nous contactez-vous ?
+POURQUOI NOUS CONTACTEZ-VOUS ?
 ├── Annuler ma commande
-│   ├── email
-│   ├── order_id
-│   └── Vérification commande (Shippingbo)
-│       ├── Commande < 24h
-│       │   └── → self-service portail ReturnGo (pas de ticket)
-│       ├── Commande > 24h
-│       │   └── → ticket créé + blocage commande
-│       ├── Commande déjà expédiée
-│       │   └── → annulation impossible, pas de ticket
-│       ├── Commande bloquée OMS (< 24h)
-│       │   └── → self-service portail ReturnGo (pas de ticket)
-│       ├── Commande bloquée OMS (> 24h)
-│       │   └── → ticket créé
-│       └── Commande introuvable
-│           └── → ticket créé + avertissement client
+│   ├── Email
+│   ├── Numéro de commande
+│   └── Continuer
+│
 ├── Modifier ma commande
-│   ├── email
-│   ├── order_id
-│   └── Vérification commande (Shippingbo)
-│       ├── Commande non expédiée
-│       │   └── Que souhaitez-vous modifier ?
-│       │       ├── Adresse
-│       │       │   ├── nouvelle adresse
-│       │       │   └── → mise à jour adresse + ticket informatif
-│       │       ├── Produit
-│       │       │   ├── message
-│       │       │   └── → blocage commande + ticket créé
-│       │       └── Information de commande
-│       │           ├── message
-│       │           └── → ticket créé
-│       ├── Commande expédiée
-│       │   └── Que souhaitez-vous modifier ?
-│       │       ├── Adresse
-│       │       │   ├── message
-│       │       │   └── → ticket créé (SAV / transporteur)
-│       │       ├── Produit
-│       │       │   └── → redirection : Retour / échange
-│       │       └── Information
-│       │           ├── message
-│       │           └── → ticket créé
-│       └── Commande introuvable
-│           ├── message
-│           └── → ticket créé
+│   ├── Email
+│   ├── Numéro de commande
+│   └── Que souhaitez-vous modifier ?
+│       ├── Adresse de livraison
+│       │   ├── Nom / prénom
+│       │   ├── Nouvelle adresse complète
+│       │   ├── Code postal
+│       │   ├── Ville
+│       │   ├── Pays
+│       │   └── Téléphone
+│       │
+│       ├── Produit / variante
+│       │   ├── Produit actuel
+│       │   ├── Nouveau produit souhaité
+│       │   └── Message
+│       │
+│       └── Information de commande
+│           └── Message
+│
 ├── Problème de livraison / suivi
 │   └── Quel est votre problème ?
 │       ├── Je n'ai pas encore reçu de lien de suivi
-│       │   ├── email
-│       │   ├── order_id
-│       │   └── → ticket créé
+│       │   ├── Email
+│       │   ├── Numéro de commande
+│       │   └── Continuer
+│       │
 │       ├── Mon colis est en retard
-│       │   ├── email
-│       │   ├── order_id
-│       │   ├── tracking_number (optionnel)
-│       │   ├── message (optionnel)
-│       │   └── → ticket créé
+│       │   ├── Email
+│       │   ├── Numéro de commande
+│       │   ├── Numéro de suivi (optionnel)
+│       │   └── Message (optionnel)
+│       │
 │       ├── Mon suivi n'avance plus / colis bloqué
-│       │   ├── email
-│       │   ├── order_id
-│       │   ├── tracking_number (optionnel)
-│       │   ├── message (optionnel)
-│       │   └── → ticket créé
+│       │   ├── Email
+│       │   ├── Numéro de commande
+│       │   ├── Numéro de suivi (optionnel)
+│       │   └── Message
+│       │
 │       ├── Problème avec le point relais
-│       │   ├── email
-│       │   ├── order_id
-│       │   ├── tracking_number (optionnel)
-│       │   ├── message
-│       │   └── → ticket créé
+│       │   ├── Email
+│       │   ├── Numéro de commande
+│       │   ├── Numéro de suivi (optionnel)
+│       │   └── Message
+│       │
 │       └── Mon colis est indiqué livré mais je ne l'ai pas reçu
-│           ├── email
-│           ├── order_id
-│           ├── tracking_number (optionnel)
-│           ├── message (obligatoire)
-│           ├── checkbox : j'ai vérifié chez mes voisins (obligatoire)
-│           ├── attestation sur l'honneur (document .doc généré, à signer et joindre)
-│           └── → ticket créé
+│           ├── Email
+│           ├── Numéro de commande
+│           ├── Numéro de suivi (optionnel)
+│           ├── Message
+│           ├── Checkbox : j'ai vérifié chez mes voisins
+│           └── Attestation sur l'honneur à signer
+│
 ├── Retour / échange
-│   └── Délai depuis réception ≤ 14 jours ?
+│   └── Avez-vous déjà effectué une demande de retour / échange ?
+│
+│       ├── Oui
+│       │   └── Quel est votre problème ?
+│       │       ├── Problème de remboursement
+│       │       │   ├── Email
+│       │       │   ├── Numéro ReturnGo
+│       │       │   └── Message
+│       │       │
+│       │       ├── Problème avec mon échange
+│       │       │   ├── Email
+│       │       │   ├── Numéro ReturnGo
+│       │       │   └── Message
+│       │       │
+│       │       ├── Suivre mon retour / échange
+│       │       │   ├── Email
+│       │       │   ├── Numéro ReturnGo
+│       │       │   └── Message
+│       │       │
+│       │       ├── Mon retour a été refusé
+│       │       │   ├── Email
+│       │       │   ├── Numéro ReturnGo
+│       │       │   └── Message
+│       │       │
+│       │       └── Autre problème
+│       │           ├── Email
+│       │           ├── Numéro ReturnGo
+│       │           └── Message
+│       │
 │       ├── Non
-│       │   ├── email
-│       │   ├── message
-│       │   └── → ticket créé (traitement manuel)
-│       └── Oui
-│           ├── Faire un retour
-│           │   ├── email
-│           │   ├── order_id
-│           │   └── → self-service portail ReturnGo
-│           ├── Faire un échange
-│           │   ├── email
-│           │   ├── order_id
-│           │   └── → self-service portail ReturnGo
-│           ├── Suivre mon retour / échange
-│           │   ├── email
-│           │   ├── returngo_id
-│           │   └── → self-service portail ReturnGo
-│           └── Le portail retour ne fonctionne pas
-│               ├── email
-│               ├── order_id
-│               ├── message
-│               └── → ticket créé
-├── Remboursement
-│   ├── Je n'ai pas reçu mon remboursement
-│   │   ├── email
-│   │   ├── returngo_id (optionnel)
-│   │   ├── message
-│   │   └── → ticket créé
-│   └── Le montant remboursé est incorrect
-│       ├── email
-│       ├── returngo_id (optionnel)
-│       ├── message
-│       └── → ticket créé
+│       │   └── Que souhaitez-vous faire ?
+│       │       ├── Faire un retour
+│       │       │   ├── Email
+│       │       │   └── Numéro de commande
+│       │       │
+│       │       └── Faire un échange
+│       │           ├── Email
+│       │           └── Numéro de commande
+│       │
+│       └── Non, j'ai eu un problème
+│           └── Quel est le problème ?
+│               ├── Le portail ne fonctionne pas
+│               │   ├── Email
+│               │   ├── Numéro de commande
+│               │   └── Message
+│               │
+│               ├── Je ne trouve pas ma commande
+│               │   ├── Email
+│               │   ├── Numéro de commande
+│               │   └── Message
+│               │
+│               ├── Mon retour a été refusé
+│               │   ├── Email
+│               │   ├── Numéro de commande
+│               │   └── Message
+│               │
+│               └── Autre problème
+│                   ├── Email
+│                   ├── Numéro de commande
+│                   └── Message
+│
 ├── Problème avec un produit reçu
 │   └── Quel est le problème ?
+│       │
 │       ├── Produit endommagé
-│       │   ├── email
-│       │   ├── order_id
-│       │   ├── photo (obligatoire)
-│       │   ├── message
-│       │   └── → ticket créé
+│       │   └── ReturnGo
+│       │
 │       ├── Produit manquant
-│       │   ├── email
-│       │   ├── order_id
-│       │   ├── photo (optionnel)
-│       │   ├── message
-│       │   └── → ticket créé
+│       │   └── ReturnGo
+│       │
 │       ├── Mauvais produit reçu
-│       │   ├── email
-│       │   ├── order_id
-│       │   ├── photo (obligatoire)
-│       │   ├── message
-│       │   └── → ticket créé
+│       │   └── ReturnGo
+│       │
 │       ├── Produit incompatible / mauvaise taille
-│       │   ├── email
-│       │   ├── order_id
-│       │   ├── message
-│       │   └── → ticket créé
+│       │   ├── Email
+│       │   ├── Modèle de montre
+│       │   ├── Numéro de commande
+│       │   └── Message
+│       │
 │       └── Produit défectueux
-│           ├── email
-│           ├── order_id
-│           ├── photo (optionnel)
-│           ├── message
-│           └── → ticket créé
-└── Autre demande
-    ├── email
-    ├── order_id (optionnel)
-    ├── message
-    └── → ticket créé
+│           └── ReturnGo

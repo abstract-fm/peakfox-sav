@@ -4,6 +4,8 @@ export const ART = {
   pointRelais: "#point-relais"
 };
 
+export const RETURN_GO_PORTAL_URL = "https://mygarminstraps.fr/a/service/returns?";
+
 export const ORDER_NUMBER_RE = /^\d+$/;
 export const RETURNGO_ID_RE = /^(ARM|RMA)\d{8}$/i;
 
@@ -15,7 +17,7 @@ const returnGoSelfservice = {
   title: "Portail ReturnGo",
   body: "Cette demande se fait directement depuis le portail ReturnGo.",
   ctaLabel: "Accéder au portail ReturnGo",
-  ctaHref: ART.retour
+  ctaHref: RETURN_GO_PORTAL_URL
 };
 
 export const FIELD_DEFS = {
