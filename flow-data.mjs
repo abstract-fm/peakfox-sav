@@ -5,6 +5,7 @@ export const ART = {
 };
 
 export const RETURN_GO_PORTAL_URL = "https://mygarminstraps.fr/a/service/returns?";
+export const ORDER_TRACKING_PORTAL_URL = "https://mygarminstraps.fr/a/service/tracking";
 
 export const ORDER_NUMBER_RE = /^\d+$/;
 export const RETURNGO_ID_RE = /^(ARM|RMA)\d{8}$/i;
@@ -18,6 +19,18 @@ const returnGoSelfservice = {
   body: "Cette demande se fait directement depuis le portail ReturnGo.",
   ctaLabel: "Accéder au portail ReturnGo",
   ctaHref: RETURN_GO_PORTAL_URL
+};
+
+const orderTrackingSelfservice = {
+  title: "Suivi de commande",
+  body: "Vous pouvez suivre votre commande directement depuis notre portail de suivi.",
+  ctaLabel: "Suivre ma commande",
+  ctaHref: ORDER_TRACKING_PORTAL_URL
+};
+
+const orderTrackingLink = {
+  label: "Suivre ma commande",
+  href: ORDER_TRACKING_PORTAL_URL
 };
 
 export const FIELD_DEFS = {
@@ -82,33 +95,38 @@ export const FLOW = {
         {
           id: "suivi_pas_suivi",
           label: "Je n'ai pas encore reçu de lien de suivi",
-          outcome: "ticket",
-          fields: ["email", "orderNumber"]
+          outcome: "selfservice",
+          fields: ["email", "orderNumber"],
+          selfservice: orderTrackingSelfservice
         },
         {
           id: "suivi_retard",
           label: "Mon colis est en retard",
           outcome: "ticket",
-          fields: ["email", "orderNumber", "trackingNumber", "messageOpt"]
+          fields: ["email", "orderNumber", "trackingNumber", "messageOpt"],
+          extraLink: orderTrackingLink
         },
         {
           id: "suivi_bloque",
           label: "Mon suivi n'avance plus / colis bloqué",
           outcome: "ticket",
-          fields: ["email", "orderNumber", "trackingNumber", "message"]
+          fields: ["email", "orderNumber", "trackingNumber", "message"],
+          extraLink: orderTrackingLink
         },
         {
           id: "suivi_relais",
           label: "Problème avec le point relais",
           outcome: "ticket",
-          fields: ["email", "orderNumber", "trackingNumber", "message"]
+          fields: ["email", "orderNumber", "trackingNumber", "message"],
+          extraLink: orderTrackingLink
         },
         {
           id: "suivi_livre_non_recu",
           label: "Mon colis est indiqué livré mais je ne l'ai pas reçu",
           outcome: "ticket",
           topText: "Téléchargez l'attestation sur l'honneur, signez-la, puis joignez le document à votre demande.",
-          fields: ["email", "orderNumber", "trackingNumber", "message", "neighborCheck", "attestationUpload_req"]
+          fields: ["email", "orderNumber", "trackingNumber", "message", "neighborCheck", "attestationUpload_req"],
+          extraLink: orderTrackingLink
         }
       ]
     },
