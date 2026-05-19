@@ -100,6 +100,27 @@ test("rejects missing required fields before calling Zendesk", async () => {
   assert.equal(calls.length, 0);
 });
 
+test("rejects invalid email before calling Zendesk", async () => {
+  const calls = mockZendeskSuccess();
+  const res = await postZendesk(validBody({ email: "not-an-email" }));
+
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.error, "Adresse e-mail invalide.");
+  assert.equal(calls.length, 0);
+});
+
+test("returns a clean message when an order lookup reports not found", async () => {
+  const calls = mockZendeskSuccess();
+  const res = await postZendesk(validBody({ orderLookupStatus: "not_found" }));
+
+  assert.equal(res.statusCode, 400);
+  assert.equal(
+    res.body.error,
+    "Cette commande est introuvable. Verifiez le numero saisi ou contactez-nous directement."
+  );
+  assert.equal(calls.length, 0);
+});
+
 test("maps configured custom fields and generates Zendesk tags", async () => {
   const calls = mockZendeskSuccess(987);
   const res = await postZendesk(validBody({
@@ -166,6 +187,39 @@ test("returns a generic error when Zendesk rejects ticket creation", async () =>
   assert.deepEqual(res.body, {
     error: "Impossible de creer la demande pour le moment."
   });
+});
+
+test("returns a timeout message when Zendesk does not respond in time", async () => {
+  global.fetch = async () => {
+    const error = new Error("The operation was aborted");
+    error.name = "TimeoutError";
+    throw error;
+  };
+
+  const res = await postZendesk(validBody());
+
+  assert.equal(res.statusCode, 504);
+  assert.deepEqual(res.body, {
+    error: "Le serveur met trop de temps a repondre. Reessayez dans quelques instants."
+  });
+});
+
+test("returns a clean service message when Zendesk env config is missing", async () => {
+  const previousToken = process.env.ZENDESK_TOKEN;
+  delete process.env.ZENDESK_TOKEN;
+
+  try {
+    const calls = mockZendeskSuccess();
+    const res = await postZendesk(validBody());
+
+    assert.equal(res.statusCode, 500);
+    assert.deepEqual(res.body, {
+      error: "Service temporairement indisponible."
+    });
+    assert.equal(calls.length, 0);
+  } finally {
+    process.env.ZENDESK_TOKEN = previousToken;
+  }
 });
 
 test("rejects spam honeypot submissions before calling Zendesk", async () => {

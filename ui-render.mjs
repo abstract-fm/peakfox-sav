@@ -235,7 +235,9 @@ async function submitForm(node) {
     render();
   } catch (error) {
     const box = document.getElementById("errBox");
-    const errorMessage = error?.message || "Impossible d'envoyer. Reessayez ou contactez-nous directement.";
+    const errorMessage = error?.isUserFacing
+      ? error.message
+      : "Impossible d'envoyer votre demande pour le moment. Reessayez dans quelques instants.";
     box.innerHTML = `<strong>Erreur</strong> - ${escapeHtml(errorMessage)}`;
     box.classList.remove("hidden");
     sendBtn.textContent = "Envoyer ma demande";

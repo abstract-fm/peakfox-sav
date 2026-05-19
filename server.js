@@ -14,6 +14,7 @@ const MAX_TEXT_LENGTH = 160;
 const MAX_PATH_IDS = 6;
 const MAX_FILES = 3;
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
+const ZENDESK_TIMEOUT_MS = 12000;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 5;
 const MIN_FORM_COMPLETION_MS = 2500;
@@ -110,6 +111,28 @@ function formatZendeskError(errorData) {
     return errorData.error;
   }
   return "Erreur Zendesk API";
+}
+
+function getRequiredEnv(name) {
+  const value = process.env[name];
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function createTimeoutSignal() {
+  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") {
+    return AbortSignal.timeout(ZENDESK_TIMEOUT_MS);
+  }
+
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), ZENDESK_TIMEOUT_MS);
+  return controller.signal;
+}
+
+function isTimeoutError(error) {
+  return error?.name === "AbortError"
+    || error?.name === "TimeoutError"
+    || error?.code === "ETIMEDOUT"
+    || error?.cause?.code === "ETIMEDOUT";
 }
 
 function cleanText(value, maxLength = MAX_TEXT_LENGTH) {
@@ -240,6 +263,9 @@ function validateSubmission(body = {}, files = []) {
   if (rule && rule.categoryId !== sanitized.categoryId) errors.push("Sous-categorie incompatible avec la categorie.");
   if (sanitized.orderNumber && !ORDER_NUMBER_RE.test(sanitized.orderNumber)) {
     errors.push("Le numero de commande doit contenir uniquement des chiffres.");
+  }
+  if (body.orderLookupStatus === "not_found") {
+    errors.push("Cette commande est introuvable. Verifiez le numero saisi ou contactez-nous directement.");
   }
   if (sanitized.returnId && !RETURNGO_ID_RE.test(sanitized.returnId)) {
     errors.push("L'ID ReturnGo doit etre au format ARM10984430 ou RMA10984430.");
@@ -387,7 +413,8 @@ async function uploadZendeskFile(fetchFn, { zendeskDomain, auth, file }) {
         Accept: "application/json",
         Authorization: `Basic ${auth}`
       },
-      body: file.buffer
+      body: file.buffer,
+      signal: createTimeoutSignal()
     }
   );
 
@@ -467,8 +494,24 @@ app.post("/api/zendesk", async (req, res) => {
     pathIds
   } = validation.sanitized;
 
+  const zendeskEmail = getRequiredEnv("ZENDESK_EMAIL");
+  const zendeskToken = getRequiredEnv("ZENDESK_TOKEN");
+  const zendeskDomain = getRequiredEnv("ZENDESK_DOMAIN");
+
+  if (!zendeskEmail || !zendeskToken || !zendeskDomain) {
+    console.error("Configuration Zendesk manquante:", {
+      ZENDESK_EMAIL: Boolean(zendeskEmail),
+      ZENDESK_TOKEN: Boolean(zendeskToken),
+      ZENDESK_DOMAIN: Boolean(zendeskDomain)
+    });
+
+    return res.status(500).json({
+      error: "Service temporairement indisponible."
+    });
+  }
+
   const auth = Buffer.from(
-    `${process.env.ZENDESK_EMAIL}/token:${process.env.ZENDESK_TOKEN}`
+    `${zendeskEmail}/token:${zendeskToken}`
   ).toString("base64");
 
   const referenceLabel = orderNumber ? `Commande ${orderNumber}` : `Retour ${returnId}`;
@@ -496,7 +539,7 @@ app.post("/api/zendesk", async (req, res) => {
     const uploadTokens = [];
     for (const file of files) {
       const token = await uploadZendeskFile(zendeskFetch, {
-        zendeskDomain: process.env.ZENDESK_DOMAIN,
+        zendeskDomain,
         auth,
         file
       });
@@ -525,7 +568,7 @@ app.post("/api/zendesk", async (req, res) => {
     }
 
     const response = await zendeskFetch(
-      `https://${process.env.ZENDESK_DOMAIN}/api/v2/tickets.json`,
+      `https://${zendeskDomain}/api/v2/tickets.json`,
       {
         method: "POST",
         headers: {
@@ -533,7 +576,8 @@ app.post("/api/zendesk", async (req, res) => {
           Accept: "application/json",
           Authorization: `Basic ${auth}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: createTimeoutSignal()
       }
     );
 
@@ -556,6 +600,13 @@ app.post("/api/zendesk", async (req, res) => {
       stack: err?.stack,
       zendeskDetails: err?.details
     });
+
+    if (isTimeoutError(err)) {
+      return res.status(504).json({
+        error: "Le serveur met trop de temps a repondre. Reessayez dans quelques instants."
+      });
+    }
+
     return res.status(500).json({ error: "Erreur interne du serveur." });
   }
 });

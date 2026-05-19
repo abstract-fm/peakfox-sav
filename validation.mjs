@@ -1,4 +1,5 @@
 ﻿import { FIELD_DEFS, ORDER_NUMBER_RE, RETURNGO_ID_RE, normalizeOrderNumber } from "./flow-data.mjs";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function validateStep(node, values) {
   for (const key of (node.fields || [])) {
@@ -10,6 +11,9 @@ export function validateStep(node, values) {
     if (def.type === "file" && !val) return "Une pièce jointe est obligatoire pour cette demande.";
     if (def.type !== "checkbox" && def.type !== "file" && (!val || !String(val).trim())) {
       return `Le champ "${(def.label || key).replace("*", "")}" est requis.`;
+    }
+    if (key === "email" && val && !EMAIL_RE.test(String(val).trim().toLowerCase())) {
+      return "Adresse e-mail invalide.";
     }
     if ((key === "orderNumber" || key === "orderNumberOpt") && val && !ORDER_NUMBER_RE.test(normalizeOrderNumber(val))) {
       return "Le numero de commande doit contenir uniquement des chiffres.";
